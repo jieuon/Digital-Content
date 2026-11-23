@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><style id="standalone-game-css">
+<!doctype html><html lang="ko"><head><meta charset=utf8><title>2030 MYEONGDONG</title><!-- [EDIT #8] --><link rel="icon" href="favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"><meta name="theme-color" content="#111216"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><style id="standalone-game-css">
 /* The original v14 city experience is preserved; its former intro/hero is hidden only on this dedicated page. */
 #hero,#intro,#world,#explore,#about,#outro{display:none!important}
 #city{display:block!important;margin-top:0!important}
@@ -7,7 +7,6 @@ html{scroll-behavior:auto!important}
 body{background:#050408}
 #nav{opacity:.95}
 </style></head><body>
-<title>2030 MYEONGDONG</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -395,6 +394,15 @@ section{position:relative}
 .cty-nav:not(.active) .arr{opacity:.25!important;transform:none!important}
 .cty-fail{position:absolute;inset:0;display:none;place-items:center;color:#fff;font-size:14px;text-align:center}
 @media (max-width:760px){.cty-keys{display:none}.cty-nav{width:140px;right:12px;bottom:12px}.cty-nav canvas{width:140px;height:140px}.cty-panel{left:5vw;right:5vw;width:auto;top:auto;bottom:4vh;transform:none}.cty-panel.show{transform:none}}
+
+/* BACK TO MAP — returns to the EXPLORE MYEONGDONG map of index.html (no intro replay) */
+.back-map{position:fixed;left:max(20px,env(safe-area-inset-left,0px));top:calc(max(18px,env(safe-area-inset-top,0px)) + 62px);z-index:150;display:inline-flex;align-items:center;gap:8px;padding:8px 14px 8px 10px;border-radius:999px;background:rgba(10,8,20,.66);border:1px solid rgba(157,92,255,.6);color:#fff;font:600 11px/1 var(--f-mono);letter-spacing:.16em;cursor:pointer!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 0 16px rgba(118,40,245,.3);transition:background .25s,border-color .25s,box-shadow .25s,transform .25s;pointer-events:auto}
+.back-map svg{width:16px;height:16px;flex:none;color:var(--lime)}
+.back-map:hover{background:rgba(118,40,245,.6);border-color:#c9b6ff;box-shadow:0 0 26px rgba(140,90,255,.6);transform:translateX(-2px)}
+.city-lock .back-map{top:max(18px,env(safe-area-inset-top,0px))}
+.city-lock .cty-tl{top:64px}
+.city-lock .cty-sub{top:90px}
+.city-lock .back-map,.city-lock .cty-sub{cursor:pointer!important}
 </style>
 
 <div class="progress" id="progress"></div>
@@ -404,6 +412,7 @@ section{position:relative}
 
 <div class="loader" id="loader" aria-hidden="true"><canvas id="introCv"></canvas></div>
 
+<a class="back-map" id="backToMap" href="index.html?return=map#explore" aria-label="지도 화면으로 돌아가기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>BACK TO MAP</span></a>
 <header class="nav pad" id="nav">
   <a class="logo" href="#city" data-go="city" data-cursor="FUTURE" aria-label="2030 MYEONGDONG — THE FUTURE IS ALREADY HERE"><img src="assets/logo.png" alt="2030 MYEONGDONG"></a>
   <nav class="menu" aria-label="주요 메뉴">
@@ -1874,4 +1883,9 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{measure()
 addEventListener('load',()=>measure());
 })();
 </script>
-<script>window.addEventListener('load',()=>{window.scrollTo(0,0);document.documentElement.classList.add('ready')},{once:true});</script></body></html>
+<script>window.addEventListener('load',()=>{window.scrollTo(0,0);document.documentElement.classList.add('ready')},{once:true});</script><script>
+(()=>{const b=document.getElementById('backToMap');if(!b)return;
+ b.addEventListener('click',e=>{try{if(document.pointerLockElement)document.exitPointerLock()}catch(_){}});
+ b.addEventListener('pointerdown',e=>e.stopPropagation());
+})();
+</script></body></html>
