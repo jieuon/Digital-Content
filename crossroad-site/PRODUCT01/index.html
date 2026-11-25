@@ -11,8 +11,23 @@
   <meta property="og:image" content="./assets/images/product-render-open.png">
   <link rel="preload" href="./assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="./assets/css/style.css">
+  <style>
+    /* [V16] official logo replaces the text brand (the old text keeps its slot invisibly so the top bar layout does not move) */
+    .brand-slot{visibility:hidden}
+    .md-logo{position:fixed;left:max(28px,env(safe-area-inset-left,0px));top:max(28px,env(safe-area-inset-top,0px));z-index:9999;display:block;width:166px;line-height:0;cursor:pointer;
+      -webkit-tap-highlight-color:transparent;transition:filter .3s ease,transform .3s ease;filter:brightness(.94) drop-shadow(0 0 0 rgba(140,90,255,0))}
+    .md-logo img{display:block;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-drag:none}
+    .md-logo:hover,.md-logo:focus-visible{filter:brightness(1.12) drop-shadow(0 0 10px rgba(150,100,255,.75)) drop-shadow(0 0 22px rgba(118,40,245,.45));transform:translateY(-1px)}
+    .md-logo:focus-visible{outline:1px solid rgba(197,255,53,.6);outline-offset:6px;border-radius:4px}
+    @media (max-width:760px){.md-logo{width:124px;left:max(16px,env(safe-area-inset-left,0px));top:max(16px,env(safe-area-inset-top,0px))}}
+  </style>
 </head>
 <body>
+
+  <!-- [V16] official logo — fixed top-left; returns to the main site's 3D map with the crossroad selected (no intro) -->
+  <a class="md-logo" id="mdLogo" href="../../index.html?return=crossroad#explore" target="_top" aria-label="2030 MYEONGDONG — 메인 3D 지도로 돌아가기" title="3D 지도로 돌아가기">
+    <img src="./assets/images/logo-official.webp" alt="2030 MYEONGDONG" width="420" height="103" draggable="false">
+  </a>
 
   <!-- ============ LOADER ============ -->
   <div id="loader" aria-live="polite">
@@ -27,7 +42,7 @@
     <div class="scrim"></div>
 
     <header class="hud-top">
-      <a class="brand" href="#" data-jump="intro">2030 MYEONGDONG<span>FUTURE EMERGENCY PATH</span></a>
+      <span class="brand brand-slot" aria-hidden="true">2030 MYEONGDONG<span>FUTURE EMERGENCY PATH</span></span>
       <div class="hud-scene"><span id="sceneNo">01</span><i></i><span id="sceneName">INTRO</span></div>
       <nav class="hud-nav" aria-label="프로젝트 이동">
         <a href="../index.html">TEAM</a>

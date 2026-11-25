@@ -453,6 +453,24 @@ section{position:relative}
 #ctySubway,.cty-click{display:none!important}
 html.city-lock,html.city-lock body{background:#050408}
 @media (max-width:760px){.cty-panel{left:auto;right:12px;width:min(360px,calc(100vw - 24px))}}
+
+/* ============ [V16] official logo (top-left, always visible) — replaces the BACK TO PLAY pill ============ */
+.md-logo{position:fixed;left:max(28px,env(safe-area-inset-left,0px));top:max(28px,env(safe-area-inset-top,0px));z-index:2147483600;display:block;width:166px;line-height:0;
+  cursor:pointer!important;pointer-events:auto;-webkit-tap-highlight-color:transparent;transition:filter .3s ease,transform .3s ease;filter:brightness(.94) drop-shadow(0 0 0 rgba(140,90,255,0))}
+.md-logo img{display:block;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.md-logo:hover,.md-logo:focus-visible{filter:brightness(1.12) drop-shadow(0 0 10px rgba(150,100,255,.75)) drop-shadow(0 0 22px rgba(118,40,245,.45));transform:translateY(-1px)}
+.md-logo:focus-visible{outline:1px solid rgba(197,255,53,.6);outline-offset:6px;border-radius:4px}
+.md-esc{position:fixed;left:max(28px,env(safe-area-inset-left,0px));top:calc(max(28px,env(safe-area-inset-top,0px)) + 50px);z-index:2147483600;font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;color:rgba(245,245,246,.78);
+  opacity:0;transform:translateY(-3px);transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap}
+.md-esc kbd{display:inline-block;padding:3px 6px;margin-right:6px;border:1px solid rgba(197,255,53,.7);border-radius:4px;color:var(--lime,#c5ff35);font:inherit;letter-spacing:.1em}
+html.md-locked .md-esc{opacity:1;transform:none}
+html.md-locked .md-logo{opacity:.92}
+/* HUD texts that lived at the top-left move below the logo */
+.city-lock .cty-tl{top:104px!important}
+.city-lock .cty-sub{top:130px!important}
+.back-map{display:none!important}
+@media (max-width:760px){.md-logo{width:124px;left:max(16px,env(safe-area-inset-left,0px));top:max(16px,env(safe-area-inset-top,0px))}
+  .md-esc{display:none}.city-lock .cty-tl{top:62px!important}.city-lock .cty-sub{top:86px!important}}
 </style>
 
 <div class="progress" id="progress"></div>
@@ -462,7 +480,7 @@ html.city-lock,html.city-lock body{background:#050408}
 
 <div class="loader" id="loader" aria-hidden="true"><canvas id="introCv"></canvas></div>
 
-<a class="back-map" id="backToMap" href="index.html?return=play#play-experience" target="_top" aria-label="게임 종료 — PLAY 화면으로 돌아가기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>BACK TO PLAY</span></a>
+<a class="md-logo" id="backToMap" href="index.html?return=play" target="_top" aria-label="2030 MYEONGDONG — 게임을 끝내고 게임을 시작한 화면으로 돌아가기" title="게임 종료 · 메인으로"><img src="assets/logo-official.webp" alt="2030 MYEONGDONG" width="420" height="103" draggable="false"></a><span class="md-esc" id="mdEsc" aria-hidden="true"><kbd>ESC</kbd> 커서 활성화 · 로고를 눌러 나가기</span>
 <header class="nav pad" id="nav">
   <a class="logo" href="#city" data-go="city" data-cursor="FUTURE" aria-label="2030 MYEONGDONG — THE FUTURE IS ALREADY HERE"><img src="assets/logo.png" alt="2030 MYEONGDONG"></a>
   <nav class="menu" aria-label="주요 메뉴">
@@ -522,7 +540,7 @@ html.city-lock,html.city-lock body{background:#050408}
 <section id="city" aria-label="명동 1인칭 탐험">
   <div class="cty-stick" id="ctyStick">
     <canvas id="ctyCv" aria-label="2030 명동 3D 거리"></canvas>
-    <div class="cty-future" id="ctyFuture"><span class="mono">ARRIVAL · 424 MYEONGDONG</span><h2>THE FUTURE<br>IS ALREADY HERE.</h2><p>스크롤로 계단을 올라 명동으로 나가세요 · SCROLL</p></div>
+    <div class="cty-future" id="ctyFuture"><span class="mono">ARRIVAL · 424 MYEONGDONG</span><h2>THE FUTURE<br>IS ALREADY HERE.</h2><p>W 키(모바일: 왼쪽 스틱)로 계단을 올라 명동으로 나가세요 · WALK UP</p></div>
     <div class="cty-hud" aria-hidden="false">
       <div class="cty-tl">2<i>0</i>30 MYEONGDONG</div>
       <div class="cty-tr">EXPLORE THE CITY<div class="cty-disc">DISCOVERED <b id="ctyCount">00</b> / 03</div></div>
@@ -1952,11 +1970,15 @@ addEventListener('load',()=>measure());
    enter(){window.__MD_RESUME&&window.__MD_RESUME();if(!window.CITY||!CITY.ready)return false;
      CITY.startDirect({lock:true,reset:true});try{window.focus()}catch(_){}return true},
    pause(){if(window.CITY&&CITY.pause)CITY.pause();window.__MD_PAUSED=true;document.documentElement.classList.remove('city-lock')},
-   exit(){API.pause();if(EMBED){post({type:'exit'});return true}location.href='index.html?return=play#play-experience';return true}};
+   exit(){API.pause();if(EMBED){post({type:'exit'});return true}location.href='index.html?return=play';return true}};   // [V16] no #hash: the stored play button decides the scroll position
  if(EMBED){document.documentElement.classList.add('md-embed')}
  // safety net: if the GPU drops the context inside the embedded layer, hand over to the stand-alone game page
  {const cv=document.getElementById('ctyCv');if(cv)cv.addEventListener('webglcontextlost',e=>{if(EMBED){post({type:'fail'})}},false)}
+ // [V16] while the mouse is captured the logo can't be clicked → show "ESC · 커서 활성화" next to it
+ document.addEventListener('pointerlockchange',()=>{document.documentElement.classList.toggle('md-locked',!!document.pointerLockElement)});
  const b=document.getElementById('backToMap');
+ if(b){['pointerdown','mousedown','pointerup','mouseup','touchstart'].forEach(t=>b.addEventListener(t,e=>e.stopPropagation(),{passive:true}));
+   b.addEventListener('keydown',e=>e.stopPropagation())}
  if(b){b.addEventListener('click',e=>{e.preventDefault();try{if(document.pointerLockElement)document.exitPointerLock()}catch(_){}API.exit()});
    b.addEventListener('pointerdown',e=>e.stopPropagation())}
  const lh=document.getElementById('ctyLockHint');if(lh)lh.addEventListener('click',()=>{if(CITY.requestLock)CITY.requestLock()});

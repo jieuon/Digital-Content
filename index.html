@@ -2198,8 +2198,12 @@ if(['crossroad','street','shopping','map','play'].includes(new URLSearchParams(l
   if(RP==='map'){RZ=-1;try{const st=JSON.parse(sessionStorage.getItem('myeongdong-map-state')||'{}');if(st&&st.act>=0&&st.act<3)RZ=st.act}catch(_){}}
   // Restore map and selected street-food zone without replaying the intro.
   const restoreCrossroad=()=>{
-    if(RP==='play'){const go=()=>{measure();const b=document.getElementById('xpStart');if(!b)return;const r=b.getBoundingClientRect();
-      window.scrollTo({top:Math.max(0,r.top+window.scrollY+r.height/2-innerHeight*.55),behavior:'instant'});sy=window.scrollY};go();setTimeout(go,350);return}
+    if(RP==='play'){if(location.hash)try{history.replaceState(null,'',location.pathname+location.search)}catch(_){}
+      let O=null;try{O=JSON.parse(sessionStorage.getItem('md2030-play-origin')||'null')}catch(_){}
+      const docTop=el=>{let y=0;for(let e=el;e;e=e.offsetParent)y+=e.offsetTop;return y};
+      const go=()=>{measure();const b=(O&&O.id&&document.getElementById(O.id))||document.getElementById('xpStart');if(!b)return;const r=b.getBoundingClientRect();
+      const y=(O&&O.id===b.id&&typeof O.off==='number')?docTop(b)-O.off:r.top+window.scrollY+r.height/2-innerHeight*.55;
+      window.scrollTo({top:Math.max(0,y),behavior:'instant'});sy=window.scrollY};go();setTimeout(go,350);return}
     const section=document.getElementById('explore');
     if(!section)return;
     measure();
@@ -2572,9 +2576,17 @@ metrics();layout();
    layer.classList.remove('loading');want=false};
  // the layer turns opaque at once (page content is taken out of layout/paint), the street then fades in from black in 0.3 s
  const show=()=>{window.__MD_GAME_ON=true;document.documentElement.classList.add('md-game-on');layer.classList.add('on');layer.setAttribute('aria-hidden','false')};
- const hide=()=>{const xs=document.getElementById('xpStart');
+ // [V16] the exact play button the visitor used (PLAY / ENTER THE CITY / PLAY THE GAME) + its place on screen
+ let origin=null;
+ // layout position (offsetTop chain) — not affected by the scroll-linked entrance transforms of the V13 flow effect
+ const docTop=el=>{let y=0;for(let e=el;e;e=e.offsetParent)y+=e.offsetTop;return y};
+ const saveOrigin=a=>{const off=docTop(a)-window.scrollY;origin={el:a,id:a.id,off};
+   try{sessionStorage.setItem('md2030-play-origin',JSON.stringify({id:a.id,off}))}catch(_){}};
+ const hide=()=>{const xs=(origin&&origin.el&&origin.el.isConnected)?origin.el:document.getElementById('xpStart');
    document.documentElement.classList.remove('md-game-on');window.__MD_GAME_ON=false;want=false;   // page content back first …
-   const at=()=>{const r=xs.getBoundingClientRect();return Math.max(0,window.scrollY+r.top+r.height/2-innerHeight*.55)};
+   const at=()=>{const r=xs.getBoundingClientRect();
+     if(origin&&origin.el===xs)return Math.max(0,docTop(xs)-origin.off);                      // exactly where it was when clicked
+     return Math.max(0,window.scrollY+r.top+r.height/2-innerHeight*.55)};
    if(xs){if(window.__mdSnap)window.__mdSnap(at);else window.scrollTo({top:at(),behavior:'instant'})}      // … land on the PLAY section …
    layer.classList.remove('on','loading');layer.setAttribute('aria-hidden','true');                      // … then fade the game out
    try{ifr&&ifr.contentWindow.postMessage({md2030:1,type:'pause'},'*')}catch(_){}
@@ -2583,7 +2595,9 @@ metrics();layout();
    if(d.type==='ready'){ready=true;if(want)enter()}
    else if(d.type==='exit')hide();
    else if(d.type==='fail'){const on=layer.classList.contains('on');hide();destroy();if(on)location.href='game.html'}});
- const play=e=>{if(e.button>0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();
+ const play=e=>{if(e.button>0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+   saveOrigin(e.currentTarget);   // also used by game.html opened on its own (index.html?return=play)
+   e.preventDefault();
    clearTimeout(removeT);if(!ifr)create();show();
    if(ready)enter();else{want=true;layer.classList.add('loading')}};
  document.querySelectorAll('a[href="game.html"]').forEach(a=>a.addEventListener('click',play));

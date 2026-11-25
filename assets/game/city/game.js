@@ -213,15 +213,23 @@ function leave(){try{document.exitPointerLock()}catch(e){}G.state='off';G.inStai
   $('#ctyPanel').classList.remove('show');G.r.dim=0;scrollTo({top:0,behavior:'smooth'})}
 G.requestLock=()=>requestLock();
 function requestLock(){if(!G.r)return;try{const p=G.r.cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{G.noLock=true;const h=$('#ctyLockHint');if(h)h.classList.add('show')})}catch(e){G.noLock=true}}
-/* [V11] direct start — no stairs / no "CLICK TO EXPLORE" gate: the player appears at the top of the subway exit, ready to walk */
-G.spawn={pos:null,yaw:Math.PI,pitch:.03};
+/* [V16] start at the BOTTOM of the subway exit stairs (the existing stair model W.stair, its walls/colliders, height
+   profile W.height and its purple stair lights). The player walks up with WASD / joystick — nothing moves on its own.
+   The old scroll-driven climb (states 'stairs' → 'ground') is not used any more; its camera step-bob, exposure ramp,
+   stair-light ramp, top-of-stairs flash and the "THE FUTURE IS ALREADY HERE" title are now driven by the player's own
+   position on the stairs (G.climb 0 → 1) inside the normal 'explore' movement, so collisions, height and view all keep working.
+   (The [V11] direct start that spawned the player on the street is replaced by this.) */
+G.STAIR={zB:-8.7,zT:1.4};          // same bottom / top marks the old scroll climb used
+G.spawn={pos:null,yaw:Math.PI,pitch:.2};
+G.climb=0;G.phase='stairs';
 G.startDirect=function(o={}){if(!G.ready)return false;const c=G.cam;
-  if(!G.spawn.pos){const z=1.4;G.spawn.pos=[0,W.height(0,z)+1.62,z]}
-  if(o.reset||G.state==='off'||G.state==='stairs'||G.state==='ground'){c.pos=G.spawn.pos.slice();c.yaw=G.spawn.yaw;c.pitch=G.spawn.pitch;G.gy=null;G.walk=0}
+  if(!G.spawn.pos){const z=G.STAIR.zB;G.spawn.pos=[0,W.height(0,z)+1.62,z]}
+  if(o.reset||G.state==='off'||G.state==='stairs'||G.state==='ground'){c.pos=G.spawn.pos.slice();c.yaw=G.spawn.yaw;c.pitch=G.spawn.pitch;G.gy=null;G.walk=0;
+    G.climb=0;G.phase='stairs';G.titleDone=false;G.startT=performance.now();if(G.r){G.r.exposure=.55}}
   G.vel=[0,0];G.keys={};G.state='explore';G.paused=false;G.hudT=performance.now();
   document.documentElement.classList.add('city-lock');
   ['#ctyClick','#ctyPanel'].forEach(q=>{const el=$(q);if(el)el.classList.remove('show')});const fu=$('#ctyFuture');if(fu)fu.style.opacity='0';
-  const r=G.r;r.fade=o.fade===false?1:Math.min(r.fade||0,.15);G.fadeIn=true;r.exposure=1.05;r.flash=0;r.dim=0;
+  const r=G.r;r.fade=o.fade===false?1:Math.min(r.fade||0,.15);G.fadeIn=true;if(G.phase!=='stairs')r.exposure=1.05;r.flash=0;r.dim=0;
   if(o.lock!==false)requestLock();
   const h=$('#ctyLockHint');if(h)h.classList.toggle('show',!document.pointerLockElement);
   return true};
@@ -292,15 +300,32 @@ G.frame=function(time,p,visible){
     let nx=c.pos[0],nz=c.pos[2];{const mx=G.vel[0]*dt,mz=G.vel[1]*dt,n=Math.max(1,Math.ceil(Math.hypot(mx,mz)/.12));for(let q=0;q<n;q++){nx+=mx/n;nz+=mz/n;[nx,nz]=collide(nx,nz,.32)}}
     const spd=Math.hypot(G.vel[0],G.vel[1]);G.walk=(G.walk||0)+spd*dt;
     const gy=W.height(nx,nz)+1.62;G.gy=G.gy==null?gy:lerp(G.gy,gy,1-Math.exp(-dt*12));
-    // head bob: stride length scaled with the new pace (cadence ≈ 2 steps/s), amplitude capped at 2.4 cm
-    c.pos=[nx,G.gy+Math.abs(Math.sin(G.walk/G.STRIDE*Math.PI))*.024*Math.min(1,spd/G.SPEED),nz];
+    // [V16] climb progress on the subway stairs (0 = bottom landing, 1 = street level at the top)
+    const St=W.stair,inWell=Math.abs(nx)<1.6&&nz>-9.85&&nz<G.STAIR.zT;
+    G.climb=inWell?clamp((nz-G.STAIR.zB)/(G.STAIR.zT-G.STAIR.zB)):1;G.phase=G.climb<1?'stairs':'street';
+    const onTreads=inWell&&nz>St.zBot&&nz<St.zTop,sk=Math.min(1,spd/G.SPEED);
+    // head bob: on the treads one gentle lift per step (tread run 0.30 m, rise 0.18 m) like the original climb;
+    // on flat ground the stride bob (cadence ≈ 2 steps/s, amplitude capped at 2.4 cm)
+    const bob=onTreads?Math.abs(Math.sin((nz-St.zBot)/St.run*Math.PI))*.03*sk:Math.abs(Math.sin(G.walk/G.STRIDE*Math.PI))*.024*sk;
+    c.pos=[nx+(onTreads?Math.sin((nz-St.zBot)/St.run*Math.PI)*.01*sk:0),G.gy+bob,nz];
     const hint=$('#ctyKeys');if(hint)hint.classList.toggle('mini',performance.now()-G.hudT>9000);
   }
   if(G.state==='panel')r.dim=lerp(r.dim,.32,1-Math.exp(-dt*10));
   if(G.state==='explore')r.dim=lerp(r.dim,0,1-Math.exp(-dt*10));
   // indoor exposure (Olive Young is brighter and cleaner)
   const inside=W.indoor(c.pos[0],c.pos[2])?1:0;r.indoor=lerp(r.indoor,inside,1-Math.exp(-dt*3));
-  if(G.state==='explore'||G.state==='panel'){r.exposure=lerp(r.exposure,lerp(1.05,.62,r.indoor),.05);if(!G.fadeIn)r.fade=1;r.flash=lerp(r.flash,0,.1)}
+  if(G.state==='explore'||G.state==='panel'){
+    const s=G.climb??1;
+    // [V16] the street's light opens up as you climb (same ramps the old scroll-driven climb used)
+    const expo=s<1?lerp(.55,1.05,sm(0,.95,s)):lerp(1.05,.62,r.indoor);r.exposure=lerp(r.exposure,expo,1-Math.exp(-dt*6));
+    W.lights.forEach(l=>{if(l.tag==='stairs'){l.k0=l.k0??l.k;l.k=l.k0*(.5+1.1*s)}});
+    if(!G.fadeIn)r.fade=1;
+    r.flash=s<1?.18*sm(.8,.93,s)*(1-sm(.93,1,s)):lerp(r.flash,0,.1);
+    const fu=$('#ctyFuture');if(fu){if(s>.16)G.titleDone=true;
+      const t=(performance.now()-(G.startT||0))/1000;
+      const o=G.titleDone||G.state!=='explore'?0:Math.min(1,t/.6)*(1-sm(.08,.16,s))*(1-sm(7,8.5,t));
+      if(fu._o!==o){fu._o=o;fu.style.opacity=String(o)}}
+  }
 
   // ---- world simulation ----
   P.update(dt,time);
