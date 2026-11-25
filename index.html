@@ -1,4 +1,38 @@
-<!doctype html><html lang="ko"><head><meta charset=utf8><title>2030 MYEONGDONG</title><!-- [EDIT #8] tab icon: team logo symbol --><link rel="icon" href="favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"><meta name="theme-color" content="#111216"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><style id="cinematic-fixed-style">
+<!doctype html><html lang="ko"><head><meta charset=utf8><title>2030 MYEONGDONG</title><!-- [EDIT #8] tab icon: team logo symbol --><link rel="icon" href="favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"><meta name="theme-color" content="#111216"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+/* ============ [V11] in-page game layer: PLAY → the street, no intermediate screen ============ */
+#gameLayer{position:fixed;inset:0;z-index:2147482000;background:#050408;opacity:0;pointer-events:none;transition:opacity .3s ease}
+#gameLayer.on{opacity:1;pointer-events:auto;transition:none}
+#gameLayer iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#050408}
+#gameLayer .gl-load{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:16px;background:linear-gradient(180deg,rgba(5,4,8,.35),rgba(5,4,8,.8)),url(assets/game-preview.webp) center/cover no-repeat;opacity:0;pointer-events:none;transition:opacity .25s;z-index:2;color:#fff;font:600 11px/1.4 var(--f-mono,monospace);letter-spacing:.24em;text-align:center}
+#gameLayer.loading .gl-load{opacity:1}
+#gameLayer .gl-load i{display:block;width:180px;height:2px;background:rgba(255,255,255,.15);overflow:hidden;border-radius:2px}
+#gameLayer .gl-load i b{display:block;width:40%;height:100%;background:linear-gradient(90deg,#7628f5,#c5ff35);animation:glBar 1.1s ease-in-out infinite}
+@keyframes glBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+html.md-game-on,html.md-game-on body{overflow:hidden!important}
+html.md-game-on .cur,html.md-game-on .spot{display:none!important}
+html.md-game-on body>*:not(#gameLayer):not(script){display:none!important}   /* nothing behind the game is laid out, painted or composited */
+
+/* ============ [V11] seamless section transitions ============
+   every section fades into one shared seam colour at its bottom and fades out of it at its top (with the purple
+   ambient light carrying over), so neighbouring black / purple sections read as one continuous space.
+   Fades sit above the section backgrounds / canvases but below the text layers. */
+:root{--seam:#0b0a11}
+.marq{border-top:0!important;border-bottom:0!important;background:var(--seam)}
+.marq::before,.marq::after{content:"";position:absolute;left:0;right:0;height:50%;pointer-events:none;z-index:1}
+.marq::before{top:0;background:linear-gradient(180deg,var(--seam),rgba(11,10,17,0))}
+.marq::after{bottom:0;background:linear-gradient(0deg,var(--seam),rgba(11,10,17,0))}
+#explore{border-top:0!important}
+#intro::after,#world::after,#products::after,#explore::after,#about::after,#play-experience::after{content:"";position:absolute;left:0;right:0;bottom:0;height:clamp(150px,26vh,280px);
+  background:linear-gradient(180deg,rgba(11,10,17,0) 0%,rgba(11,10,17,.42) 38%,rgba(11,10,17,.82) 72%,var(--seam) 100%);pointer-events:none;z-index:6}
+#world::before,#products::before,#explore::before,#about::before,#play-experience::before,#outro::before{content:"";position:absolute;left:0;right:0;top:0;height:clamp(170px,30vh,300px);
+  background:radial-gradient(75% 100% at 50% 0%,rgba(118,40,245,.15),rgba(118,40,245,0) 72%),linear-gradient(180deg,var(--seam) 0%,rgba(11,10,17,.8) 22%,rgba(11,10,17,.4) 55%,rgba(11,10,17,0) 100%);pointer-events:none;z-index:6}
+#play-experience{background:linear-gradient(180deg,var(--seam) 0,#07060c 20%,#07060c 80%,var(--seam) 100%)}
+#intro .intro-in,#about .ab,#outro .out-in{position:relative;z-index:7}
+#world .bigtype,#world .chips,#world .steps,#world .conn-sub,#world .steps-rail,#world .hint,#world .links{z-index:7}
+#products .pc-head,#products .pc-stage,#products .pc-dots,#products .pc-hint{position:relative;z-index:7}
+#explore .ex-head,#explore .ex-play,#explore .hot-wrap,#explore .ex-foot{z-index:7}#explore .zcard{z-index:8}
+#play-experience .xp-heading,#play-experience .xp-stage,#play-experience .xp-bottom{position:relative;z-index:7!important}
+</style><style id="cinematic-fixed-style">
 #cinematicOverlay{position:fixed;inset:0;z-index:150;background:#050409;overflow:hidden;opacity:1;visibility:visible;transition:opacity 1.6s cubic-bezier(.22,.61,.36,1),visibility 0s 1.6s;isolation:isolate}
 #cinematicOverlay.finished{opacity:0;visibility:hidden;pointer-events:none}
 #cinematicOverlay video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#050409}
@@ -703,7 +737,7 @@ const ZONES=[
   prod:{name:'스마트 바구니 디스플레이',line:'바구니 입구에 걸어 쓰는 탈부착 안내 디스플레이'},href:'smart-basket/index.html',img:'smart-basket/images/IMG-01_hero.webp'},
  {id:'crossroad',no:'03',ko:'교차로',en:'CROSSROAD ZONE',gi:[11,11],
   desc:'세 갈래 길이 만나는 명동의 중심. 모든 동선이 교차하는 자리에서 도시의 빛이 방향을 안내합니다.',
-  prod:{name:'EMERGENCY PATH SYSTEM',line:'긴급 상황에서 통행로를 확보하는 AI 기반 가변형 안전 장치'},href:'product-crossroad.html',img:'assets/products/crossroad.webp'}
+  prod:{name:'EMERGENCY PATH SYSTEM',line:'긴급 상황에서 통행로를 확보하는 AI 기반 가변형 안전 장치'},href:'product-crossroad.html',img:'assets/products/emergency-path-card.webp'}
 ];
 
 /* ============ layout cache ============ */
@@ -2153,12 +2187,14 @@ function jumpTo(id){const l=L[id];if(!l)return;const cutEl=$('#cut');
  ['#exPlay','#toGame'].forEach(q=>{const a=$(q);if(a)a.addEventListener('click',()=>{try{sessionStorage.setItem('myeongdong-map-state',JSON.stringify({act:E.act}))}catch(_){}})});}
 /* game → map: remember the map state when leaving for the game */
 {const xs=document.getElementById('xpStart');if(xs)xs.addEventListener('click',()=>{try{sessionStorage.setItem('myeongdong-map-state',JSON.stringify({act:E.act}))}catch(_){}})}
-if(['crossroad','street','shopping','map'].includes(new URLSearchParams(location.search).get('return'))){
+if(['crossroad','street','shopping','map','play'].includes(new URLSearchParams(location.search).get('return'))){
   const RP=new URLSearchParams(location.search).get('return');
   let RZ={street:0,shopping:1,crossroad:2}[RP];
   if(RP==='map'){RZ=-1;try{const st=JSON.parse(sessionStorage.getItem('myeongdong-map-state')||'{}');if(st&&st.act>=0&&st.act<3)RZ=st.act}catch(_){}}
   // Restore map and selected street-food zone without replaying the intro.
   const restoreCrossroad=()=>{
+    if(RP==='play'){const go=()=>{measure();const b=document.getElementById('xpStart');if(!b)return;const r=b.getBoundingClientRect();
+      window.scrollTo({top:Math.max(0,r.top+window.scrollY+r.height/2-innerHeight*.55),behavior:'instant'});sy=window.scrollY};go();setTimeout(go,350);return}
     const section=document.getElementById('explore');
     if(!section)return;
     measure();
@@ -2307,7 +2343,9 @@ function updateChrome(){
 
 /* ============ loop ============ */
 let last=0;
+window.__mdSnap=y=>{measure();if(typeof y==='function')y=y();window.scrollTo({top:y,behavior:'instant'});sy=window.scrollY};
 function frame(ts){
+  if(window.__MD_GAME_ON){requestAnimationFrame(frame);return}
   if(window.__introFilmActive){if(FINE){dot.style.transform=`translate3d(${M.x}px,${M.y}px,0)`;const rx=(ring._x=lerp(ring._x??M.x,M.x,.35)),ry=(ring._y=lerp(ring._y??M.y,M.y,.35));ring.style.transform=`translate3d(${rx}px,${ry}px,0)`;}requestAnimationFrame(frame);return;}
   const time=ts/1000;
   const prev=sy;sy=RM?scrollY:lerp(sy,scrollY,sy<L.intro.top?.06:.11);if(Math.abs(sy-scrollY)<.1)sy=scrollY;const vel=sy-prev;
@@ -2403,7 +2441,7 @@ IN.logo.src='assets/logo-2030.png';
   (function loop(){if(IN.stop)return;const T=RM?9:(performance.now()-t0)/1000;IN.draw(T);requestAnimationFrame(loop)})();
 })();
 
-const RET=['crossroad','street','shopping','map'].includes(new URLSearchParams(location.search).get('return'));
+const RET=['crossroad','street','shopping','map','play'].includes(new URLSearchParams(location.search).get('return'));
 if(RET){$('#loader').style.display='none';IN.stop=true}   // returning from a product page / the game: no start animation
 boot();
 (function tick(){
@@ -2436,7 +2474,7 @@ a.addEventListener('stalled',()=>{if(phase===1)errorState()});b.addEventListener
 notice.addEventListener('click',()=>{notice.style.display='none';if(phase===2)playVideo(b).catch(errorState);else if(phase===1)playVideo(a).catch(errorState);else playA()});
 skip.addEventListener('click',e=>{e.preventDefault();overlay.classList.add('skipping');title.classList.remove('show');finish()});
 addEventListener('keydown',e=>{if(!ended&&started&&e.key==='Escape'){overlay.classList.add('skipping');finish()}});
-const start=()=>{if(ended)return;if(['crossroad','street','shopping','map'].includes(new URLSearchParams(location.search).get('return'))){overlay.classList.add('skipping');finish();return}if(document.documentElement.classList.contains('ready')){playA();return}later(start,100)};
+const start=()=>{if(ended)return;if(['crossroad','street','shopping','map','play'].includes(new URLSearchParams(location.search).get('return'))){overlay.classList.add('skipping');finish();return}if(document.documentElement.classList.contains('ready')){playA();return}later(start,100)};
 start();
 })();
 </script>
@@ -2507,4 +2545,54 @@ st.addEventListener('selectstart',e=>e.preventDefault());
 addEventListener('resize',()=>{metrics();layout()});
 metrics();layout();
 })();
-</script></body></html>
+</script><div id="gameLayer" aria-hidden="true"><div class="gl-load"><span>ENTERING 2030 MYEONGDONG</span><i><b></b></i></div></div>
+<script id="game-layer-script">
+/* [V11] PLAY → the 1st-person street, instantly.
+   game.html is preloaded (idle time, when the visitor approaches the PLAY section) inside a hidden full-screen layer and
+   pauses itself after one warm-up frame. Clicking PLAY only fades the layer in (0.3 s) and calls MD2030GAME.enter()
+   inside the click, so pointer lock + keyboard are active at once. BACK TO PLAY fades it out over the PLAY section and
+   pauses the game (render loop, keys, mouse). Far away from the PLAY section the iframe is released to free GPU memory. */
+(()=>{
+ const layer=document.getElementById('gameLayer');if(!layer)return;
+ let ifr=null,ready=false,want=false,removeT=0;
+ const create=()=>{if(ifr)return;ifr=document.createElement('iframe');ifr.src='game.html?embed=1';ifr.title='2030 명동 1인칭 탐험';
+   ifr.setAttribute('allow','fullscreen');ifr.setAttribute('tabindex','-1');layer.appendChild(ifr);ready=false};
+ const destroy=()=>{if(!ifr||layer.classList.contains('on'))return;try{ifr.contentWindow.postMessage({md2030:1,type:'pause'},'*')}catch(_){}
+   try{ifr.src='about:blank'}catch(_){}ifr.remove();ifr=null;ready=false};
+ const enter=()=>{if(!ifr)return;const w=ifr.contentWindow;let ok=false;
+   try{ok=!!(w.MD2030GAME&&w.MD2030GAME.enter())}catch(_){}               // same origin: direct call inside the click → pointer lock allowed
+   if(!ok){try{w.postMessage({md2030:1,type:'enter'},'*')}catch(_){}}     // file:// etc.: message (first click in the game captures the mouse)
+   try{ifr.focus();w.focus()}catch(_){}
+   layer.classList.remove('loading');want=false};
+ // the layer turns opaque at once (page content is taken out of layout/paint), the street then fades in from black in 0.3 s
+ const show=()=>{window.__MD_GAME_ON=true;document.documentElement.classList.add('md-game-on');layer.classList.add('on');layer.setAttribute('aria-hidden','false')};
+ const hide=()=>{const xs=document.getElementById('xpStart');
+   document.documentElement.classList.remove('md-game-on');window.__MD_GAME_ON=false;want=false;   // page content back first …
+   const at=()=>{const r=xs.getBoundingClientRect();return Math.max(0,window.scrollY+r.top+r.height/2-innerHeight*.55)};
+   if(xs){if(window.__mdSnap)window.__mdSnap(at);else window.scrollTo({top:at(),behavior:'instant'})}      // … land on the PLAY section …
+   layer.classList.remove('on','loading');layer.setAttribute('aria-hidden','true');                      // … then fade the game out
+   try{ifr&&ifr.contentWindow.postMessage({md2030:1,type:'pause'},'*')}catch(_){}
+   try{window.focus();xs&&xs.focus({preventScroll:true})}catch(_){}};
+ addEventListener('message',e=>{const d=e.data||{};if(!d.md2030||!ifr||e.source!==ifr.contentWindow)return;
+   if(d.type==='ready'){ready=true;if(want)enter()}
+   else if(d.type==='exit')hide();
+   else if(d.type==='fail'){const on=layer.classList.contains('on');hide();destroy();if(on)location.href='game.html'}});
+ const play=e=>{if(e.button>0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();
+   clearTimeout(removeT);if(!ifr)create();show();
+   if(ready)enter();else{want=true;layer.classList.add('loading')}};
+ document.querySelectorAll('a[href="game.html"]').forEach(a=>a.addEventListener('click',play));
+ // preload: only in idle time, once the PLAY section is within ~1.5 screens
+ const idle=window.requestIdleCallback?(f=>requestIdleCallback(f,{timeout:2000})):(f=>setTimeout(f,300));
+ const target=document.getElementById('play-experience');
+ if(target&&'IntersectionObserver' in window){
+   new IntersectionObserver(es=>es.forEach(en=>{
+     if(en.isIntersecting){clearTimeout(removeT);if(!ifr)idle(create)}
+     else if(ifr&&!layer.classList.contains('on')){clearTimeout(removeT);removeT=setTimeout(destroy,60000)}   // far away for 1 min → release
+   }),{rootMargin:'150% 0px 150% 0px'}).observe(target)}
+ // warm the HTTP cache for the game scripts once the page is idle (network only, nothing is parsed here)
+ const afterFilm=f=>{const w=()=>window.__introFilmActive?setTimeout(w,1000):setTimeout(f,3000);w()};
+ addEventListener('load',()=>afterFilm(()=>idle(()=>{['game.html','assets/game/city/engine.js','assets/game/city/world.js','assets/game/characters/chars.js','assets/game/city/people.js','assets/game/city/game.js']
+   .forEach(h=>{const l=document.createElement('link');l.rel='prefetch';l.href=h;document.head.appendChild(l)})})),{once:true});
+})();
+</script>
+</body></html>

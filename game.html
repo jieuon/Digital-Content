@@ -403,6 +403,43 @@ section{position:relative}
 .city-lock .cty-tl{top:64px}
 .city-lock .cty-sub{top:90px}
 .city-lock .back-map,.city-lock .cty-sub{cursor:pointer!important}
+
+/* ============ [V11] product info panel · prompt · lock hint ============ */
+.cty-panel{right:clamp(16px,4vw,64px);width:min(380px,calc(100vw - 32px));max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);overflow:auto;scrollbar-width:none;padding:0!important;border-radius:20px;
+  background:rgba(12,10,20,.72)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);border:1px solid rgba(157,92,255,.55)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 42px rgba(118,40,245,.32),inset 0 1px 0 rgba(255,255,255,.06)!important;transition:opacity .28s ease,transform .32s cubic-bezier(.2,.8,.2,1)}
+.cty-panel::-webkit-scrollbar{display:none}
+.cty-panel .cty-img{position:relative;aspect-ratio:16/10;background:radial-gradient(110% 80% at 50% 35%,#2a1850,#0a0812 72%);border-radius:20px 20px 0 0;overflow:hidden}
+.cty-panel .cty-img img{width:100%;height:100%;object-fit:cover;display:block}
+.cty-panel .cty-img::after{content:"";position:absolute;inset:auto 0 0 0;height:40%;background:linear-gradient(180deg,transparent,rgba(12,10,20,.85));pointer-events:none}
+.cty-panel .cty-body{padding:16px 20px 18px}
+.cty-panel .no{font-size:10px;letter-spacing:.2em}
+.cty-panel h3{font-size:22px;margin:8px 0 4px;line-height:1.2}
+.cty-panel .zone{margin-top:0;color:#c9b6ff;letter-spacing:.06em;font-size:11px;font-family:'Pretendard','Noto Sans KR',sans-serif}
+.cty-panel .zone::before{content:"● ";color:var(--lime)}
+.cty-ps{margin:14px 0 16px;padding:0}
+.cty-ps dt{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;color:var(--lime);margin-top:10px}
+.cty-ps dt:first-child{margin-top:0}
+.cty-ps dd{margin:4px 0 0;font-size:13px;line-height:1.6;color:rgba(245,245,246,.84)}
+.cty-panel .row{display:flex;gap:8px}
+.cty-panel .row a,.cty-panel .row button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;padding:12px 10px;border-radius:999px;cursor:pointer;text-decoration:none;color:#fff;border:1px solid rgba(245,245,246,.25);background:transparent;transition:background .2s,box-shadow .2s,border-color .2s}
+.cty-panel .row a.pri{flex:1.4;background:#7628f5;border-color:#9d5cff;box-shadow:0 6px 22px rgba(118,40,245,.45)}
+.cty-panel .row a.pri:hover{background:#8b3dff;box-shadow:0 8px 30px rgba(140,80,255,.7)}
+.cty-panel .row button:hover{border-color:var(--lime);color:var(--lime)}
+.cty-panel .cty-hint{margin-top:12px}
+.cty-x{position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border-radius:50%;border:1px solid rgba(245,245,246,.3);background:rgba(10,8,18,.6);color:#fff;font-size:20px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.cty-x:hover{border-color:var(--lime);color:var(--lime)}
+.city-lock body,.city-lock body *{cursor:auto!important}.city-lock #ctyCv{cursor:crosshair!important}.city-lock a,.city-lock button{cursor:pointer!important}
+.cty-prompt{top:calc(50% + 40px);letter-spacing:.12em;font-size:12.5px;padding:8px 14px 8px 8px;border-radius:999px;background:rgba(10,8,18,.55);border:1px solid rgba(197,255,53,.45);box-shadow:0 0 18px rgba(197,255,53,.18)}
+.cty-prompt kbd.wide{width:auto;padding:0 8px;font-size:10px;letter-spacing:.14em;background:rgba(197,255,53,.18);border-color:rgba(197,255,53,.8);color:var(--lime)}
+.cty-prompt .or{opacity:.6;font-size:11px}
+.cty-cross{transition:width .2s,height .2s,margin .2s,background .2s,box-shadow .2s,border-color .2s}
+.cty-cross.on{width:22px;height:22px;margin:-11px;background:transparent;border:2px solid var(--lime);box-shadow:0 0 12px rgba(197,255,53,.7)}
+.cty-lockhint{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);z-index:4;padding:9px 16px;border-radius:999px;border:1px solid rgba(157,92,255,.6);background:rgba(10,8,18,.66);color:#e9e3ff;font-size:11.5px;letter-spacing:.06em;opacity:0;pointer-events:none;transition:opacity .3s;cursor:pointer;white-space:nowrap}
+.cty-lockhint.show{opacity:1;pointer-events:auto}
+#ctySubway,.cty-click{display:none!important}
+html.city-lock,html.city-lock body{background:#050408}
+@media (max-width:760px){.cty-panel{left:auto;right:12px;width:min(360px,calc(100vw - 24px))}}
 </style>
 
 <div class="progress" id="progress"></div>
@@ -412,7 +449,7 @@ section{position:relative}
 
 <div class="loader" id="loader" aria-hidden="true"><canvas id="introCv"></canvas></div>
 
-<a class="back-map" id="backToMap" href="index.html?return=map#explore" aria-label="지도 화면으로 돌아가기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>BACK TO MAP</span></a>
+<a class="back-map" id="backToMap" href="index.html?return=play#play-experience" target="_top" aria-label="게임 종료 — PLAY 화면으로 돌아가기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>BACK TO PLAY</span></a>
 <header class="nav pad" id="nav">
   <a class="logo" href="#city" data-go="city" data-cursor="FUTURE" aria-label="2030 MYEONGDONG — THE FUTURE IS ALREADY HERE"><img src="assets/logo.png" alt="2030 MYEONGDONG"></a>
   <nav class="menu" aria-label="주요 메뉴">
@@ -478,7 +515,7 @@ section{position:relative}
       <div class="cty-tr">EXPLORE THE CITY<div class="cty-disc">DISCOVERED <b id="ctyCount">00</b> / 03</div></div>
       <div class="cty-comp" id="ctyComp"></div>
       <div class="cty-cross"></div>
-      <div class="cty-keys" id="ctyKeys">W A S D — MOVE &nbsp;·&nbsp; MOUSE — LOOK &nbsp;·&nbsp; SHIFT — RUN &nbsp;·&nbsp; E — INTERACT &nbsp;·&nbsp; 1 2 3 — ROUTE &nbsp;·&nbsp; ESC — RELEASE CURSOR</div>
+      <div class="cty-keys" id="ctyKeys">W A S D — MOVE &nbsp;·&nbsp; MOUSE — LOOK &nbsp;·&nbsp; SHIFT — RUN &nbsp;·&nbsp; CLICK / E — PRODUCT &nbsp;·&nbsp; 1 2 3 — ROUTE &nbsp;·&nbsp; ESC — RELEASE CURSOR</div>
       <button class="cty-sub" id="ctySubway" type="button">← BACK TO SUBWAY</button>
       <div class="cty-nav" id="ctyNav">
         <div class="dests"><button type="button" data-dest="0">01</button><button type="button" data-dest="1">02</button><button type="button" data-dest="2">03</button></div>
@@ -487,12 +524,19 @@ section{position:relative}
       </div>
     </div>
     <button class="cty-click" id="ctyClick" type="button"><b>CLICK TO EXPLORE</b><span>W A S D 이동 · 마우스로 둘러보기 · 세 가지 제품을 찾아보세요</span></button>
-    <div class="cty-prompt" id="ctyPrompt"><kbd>E</kbd>PRESS E TO EXPLORE</div>
-    <aside class="cty-panel" id="ctyPanel" aria-live="polite">
-      <div class="no" id="ctyNo">PRODUCT 01</div><div class="zone" id="ctyZone"></div>
-      <h3 id="ctyName"></h3><p id="ctyLine"></p><ul id="ctyFeat"></ul>
-      <div class="row"><button class="pri" id="ctyInteract" type="button"><span>INTERACT</span></button><button id="ctyBack" type="button">BACK TO CITY</button></div>
-      <div class="cty-hint">DRAG — ROTATE &nbsp;·&nbsp; E / ESC — BACK</div>
+    <div class="cty-prompt" id="ctyPrompt"><kbd class="wide">CLICK</kbd><span class="or">또는</span><kbd>E</kbd><span>제품 정보 보기</span></div>
+    <button class="cty-lockhint" id="ctyLockHint" type="button">화면을 클릭하면 마우스로 시점을 움직일 수 있어요 · CLICK TO LOOK</button>
+    <aside class="cty-panel" id="ctyPanel" role="dialog" aria-modal="false" aria-labelledby="ctyName">
+      <button class="cty-x" id="ctyPanelClose" type="button" aria-label="제품 정보 닫기">×</button>
+      <div class="cty-img"><img id="ctyImg" src="" alt="" decoding="async"></div>
+      <div class="cty-body">
+        <div class="no" id="ctyNo">PRODUCT 01</div>
+        <h3 id="ctyName"></h3>
+        <div class="zone" id="ctyZone"></div>
+        <dl class="cty-ps"><dt>PROBLEM · 문제</dt><dd id="ctyProblem"></dd><dt>SOLUTION · 해결</dt><dd id="ctySolve"></dd></dl>
+        <div class="row"><a class="pri" id="ctyView" href="#" target="_top"><span>VIEW PRODUCT</span><span aria-hidden="true">↗</span></a><button id="ctyBack" type="button">닫기</button></div>
+        <div class="cty-hint">E / ESC — 닫고 계속 탐험하기</div>
+      </div>
     </aside>
     <div class="cty-done" id="ctyDone"><i></i><b>ALL 3 PRODUCTS DISCOVERED</b><span>2030 명동의 세 가지 제품을 모두 찾았습니다</span></div>
     <div class="cty-fail" id="ctyFail">이 브라우저는 WebGL2를 지원하지 않아 3D 거리를 표시할 수 없습니다.<br>최신 Chrome · Edge · Safari에서 열어 주세요.</div>
@@ -684,7 +728,7 @@ $$('.sw').forEach(s=>s.addEventListener('click',()=>{const h=s.dataset.hex;if(h=
   try{navigator.clipboard.writeText(h).then(()=>say(h+' 복사됨')).catch(()=>say(h))}catch(e){say(h)}}));
 
 /* nav */
-$$('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();let id=a.dataset.go;if(window.CITY&&(CITY.state==='explore'||CITY.state==='inspect'))return;
+$$('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();let id=a.dataset.go;if(window.CITY&&(CITY.state==='explore'||CITY.state==='panel'))return;
   if(id==='cityTop'){const l=L.city;scrollTo({top:l.top+l.h-VH,behavior:RM?'auto':'smooth'});return}
   const l=L[id];if(!l)return;
   let y=l.top;
@@ -1792,7 +1836,9 @@ function updateChrome(){
 
 /* ============ loop ============ */
 let last=0;
+window.__MD_LOOP=true;
 function frame(ts){
+  if(window.__MD_PAUSED){window.__MD_LOOP=false;return}
   const time=ts/1000;
   const prev=sy;sy=RM?scrollY:lerp(sy,scrollY,sy<L.city.top?.06:.1);if(Math.abs(sy-scrollY)<.1)sy=scrollY;const vel=sy-prev;
   M.sx=lerp(M.sx,M.x,RM?1:.14);M.sy=lerp(M.sy,M.y,RM?1:.14);
@@ -1801,19 +1847,16 @@ function frame(ts){
     dot.style.transform=`translate3d(${M.x}px,${M.y}px,0)`;
     ring.style.transform=`translate3d(${rx}px,${ry}px,0) scale(${M.down?.82:1})`;}
   spotEl.style.setProperty('--mx',M.sx+'px');spotEl.style.setProperty('--my',M.sy+'px');
-  safe(()=>updateHero(time),'hero');
-  safe(()=>P.draw&&P.draw(),'particles');
-  safe(()=>drawMetro(time),'metro');
-  if(window.CITY){const cl=CITY.state==='explore'||CITY.state==='inspect'||CITY.state==='return';safe(()=>CITY.frame(time,prog('city'),cl||near('city',0)),'city')}
+  // [V11] this page only shows the city: the hidden hero / particles / metro layers are not drawn any more
+  if(window.CITY){const cl=CITY.state==='explore'||CITY.state==='panel';safe(()=>CITY.frame(time,prog('city'),cl||near('city',0)),'city')}
   safe(updateChrome,'chrome');
   requestAnimationFrame(frame);
 }
+window.__MD_RESUME=()=>{window.__MD_PAUSED=false;if(!window.__MD_LOOP){window.__MD_LOOP=true;requestAnimationFrame(frame)}};
 
 /* ============ boot ============ */
 function boot(){
   safe(splitIntro,'split');
-  safe(initParticles,'init particles');
-  safe(initMetro,'init metro');
   safe(()=>window.CITY&&CITY.init($('#ctyCv')),'init city');
   measure();
   addEventListener('resize',()=>{measure()});
@@ -1884,8 +1927,35 @@ addEventListener('load',()=>measure());
 })();
 </script>
 <script>window.addEventListener('load',()=>{window.scrollTo(0,0);document.documentElement.classList.add('ready')},{once:true});</script><script>
-(()=>{const b=document.getElementById('backToMap');if(!b)return;
- b.addEventListener('click',e=>{try{if(document.pointerLockElement)document.exitPointerLock()}catch(_){}});
- b.addEventListener('pointerdown',e=>e.stopPropagation());
+/* [V11] PLAY → straight into the street.
+   · Embedded (index.html preloads this page in a hidden layer, ?embed=1): boot, render one warm-up frame, pause and wait.
+     index.html calls MD2030GAME.enter() inside the PLAY click, so pointer lock + keyboard are live from the first frame.
+   · Opened directly: start walking immediately (WASD works at once; the first click captures the mouse).
+   · BACK TO PLAY: pause the loop, release the mouse and keys, and return to the PLAY section (no intro replay). */
+(()=>{
+ const EMBED=new URLSearchParams(location.search).has('embed')&&window.parent!==window;
+ const post=m=>{try{window.parent.postMessage(Object.assign({md2030:1},m),'*')}catch(_){}};
+ const API=window.MD2030GAME={embedded:EMBED,ready:false,
+   enter(){window.__MD_RESUME&&window.__MD_RESUME();if(!window.CITY||!CITY.ready)return false;
+     CITY.startDirect({lock:true,reset:true});try{window.focus()}catch(_){}return true},
+   pause(){if(window.CITY&&CITY.pause)CITY.pause();window.__MD_PAUSED=true;document.documentElement.classList.remove('city-lock')},
+   exit(){API.pause();if(EMBED){post({type:'exit'});return true}location.href='index.html?return=play#play-experience';return true}};
+ if(EMBED){document.documentElement.classList.add('md-embed')}
+ // safety net: if the GPU drops the context inside the embedded layer, hand over to the stand-alone game page
+ {const cv=document.getElementById('ctyCv');if(cv)cv.addEventListener('webglcontextlost',e=>{if(EMBED){post({type:'fail'})}},false)}
+ const b=document.getElementById('backToMap');
+ if(b){b.addEventListener('click',e=>{e.preventDefault();try{if(document.pointerLockElement)document.exitPointerLock()}catch(_){}API.exit()});
+   b.addEventListener('pointerdown',e=>e.stopPropagation())}
+ const lh=document.getElementById('ctyLockHint');if(lh)lh.addEventListener('click',()=>{if(CITY.requestLock)CITY.requestLock()});
+ // the product page link leaves the game: tidy up first so nothing keeps running
+ const vw=document.getElementById('ctyView');if(vw)vw.addEventListener('click',()=>{API.pause()});
+ addEventListener('message',e=>{const d=e.data||{};if(!d.md2030)return;if(d.type==='enter')API.enter();else if(d.type==='pause')API.pause()});
+ const boot=()=>{if(!window.CITY||!CITY.ready){if(window.CITY&&CITY.fail){post({type:'fail'});return}setTimeout(boot,50);return}
+   if(EMBED){CITY.startDirect({lock:false,fade:false});           // warm-up: shaders + buffers compiled now, not on PLAY
+     let n=0;const warm=()=>{if(++n<3){requestAnimationFrame(warm);return}if(!API.active){API.pause();CITY.state='explore'}API.ready=true;post({type:'ready'})};requestAnimationFrame(warm)}
+   else{CITY.startDirect({lock:true});API.ready=true}};
+ const _enter=API.enter;API.enter=function(){API.active=true;return _enter()};
+ const _pause=API.pause;API.pause=function(){API.active=false;_pause()};
+ if(document.readyState==='complete')boot();else addEventListener('load',boot,{once:true});
 })();
 </script></body></html>

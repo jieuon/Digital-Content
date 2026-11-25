@@ -24,8 +24,11 @@ function lin(c){return new T.Color().setRGB(c[0],c[1],c[2],T.LinearSRGBColorSpac
 function buildModel(g,onTex){
   var j=g.json,bin=g.bin,root=new T.Group();
   function view(i){return j.bufferViews[i]}
-  function acc(i,Arr,n){var a=j.accessors[i],v=view(a.bufferView),o=(v.byteOffset||0)+(a.byteOffset||0);
-    return new Arr(bin.buffer,bin.byteOffset+o,a.count*n)}
+  /* [V11] accessors may be quantized (KHR_mesh_quantization: int16 normals with stride, uint16 uv / indices) */
+  var CT={5126:Float32Array,5125:Uint32Array,5123:Uint16Array,5122:Int16Array,5121:Uint8Array,5120:Int8Array};
+  function attr(i,n){var a=j.accessors[i],v=view(a.bufferView),o=(v.byteOffset||0)+(a.byteOffset||0),A=CT[a.componentType]||Float32Array,es=A.BYTES_PER_ELEMENT,st=v.byteStride||0;
+    if(st&&st!==n*es){var ib=new T.InterleavedBuffer(new A(bin.buffer,bin.byteOffset+o,a.count*st/es),st/es);return new T.InterleavedBufferAttribute(ib,n,0,!!a.normalized)}
+    return new T.BufferAttribute(new A(bin.buffer,bin.byteOffset+o,a.count*n),n,!!a.normalized)}
   var texCache={};
   function tex(i){
     if(texCache[i]) return texCache[i];
@@ -52,10 +55,10 @@ function buildModel(g,onTex){
     var me=j.meshes[nd.mesh];
     me.primitives.forEach(function(pr){
       var geo=new T.BufferGeometry(),a=pr.attributes;
-      geo.setAttribute('position',new T.BufferAttribute(acc(a.POSITION,Float32Array,3),3));
-      geo.setAttribute('normal',new T.BufferAttribute(acc(a.NORMAL,Float32Array,3),3));
-      if(a.TEXCOORD_0!=null) geo.setAttribute('uv',new T.BufferAttribute(acc(a.TEXCOORD_0,Float32Array,2),2));
-      geo.setIndex(new T.BufferAttribute(acc(pr.indices,Uint32Array,1),1));
+      geo.setAttribute('position',attr(a.POSITION,3));
+      geo.setAttribute('normal',attr(a.NORMAL,3));
+      if(a.TEXCOORD_0!=null) geo.setAttribute('uv',attr(a.TEXCOORD_0,2));
+      geo.setIndex(attr(pr.indices,1));
       var mat=material(pr.material),mesh=new T.Mesh(geo,mat);
       mesh.name=nd.name||'';
       if(mat.isMeshBasicMaterial){mesh.renderOrder=5}else{mesh.castShadow=true;mesh.receiveShadow=true}
@@ -67,11 +70,12 @@ function buildModel(g,onTex){
 
 function loadBuffer(o){
   if(o.b64) return Promise.resolve(b64ToBuf(o.b64));
+  var V=o.fallbackVar||'__GLB_B64';
   var viaScript=function(){
     return new Promise(function(res,rej){
-      if(window.__GLB_B64||!o.fallbackScript) return window.__GLB_B64?res(b64ToBuf(window.__GLB_B64)):rej(new Error('GLB를 읽지 못했습니다'));
+      if(window[V]||!o.fallbackScript) return window[V]?res(b64ToBuf(window[V])):rej(new Error('GLB를 읽지 못했습니다'));
       var s=document.createElement('script');s.src=o.fallbackScript;
-      s.onload=function(){window.__GLB_B64?res(b64ToBuf(window.__GLB_B64)):rej(new Error('GLB 데이터 없음'))};
+      s.onload=function(){window[V]?res(b64ToBuf(window[V])):rej(new Error('GLB 데이터 없음'))};
       s.onerror=function(){rej(new Error('GLB 데이터 파일 로드 실패'))};
       document.head.appendChild(s);
     });
@@ -114,7 +118,7 @@ window.ProductViewer=function(box,opt){
     cam.aspect=w/h;
     // 가로 280mm가 화면 폭의 약 78%가 되도록 거리 계산 (세로가 좁으면 세로 기준)
     var tv=Math.tan(cam.fov*RAD/2),th=tv*cam.aspect;
-    var rW=0.15/(th*0.82),rH=0.09/(tv*0.82);
+    var rW=(S.hw||0.15)/(th*0.82),rH=(S.hh||0.09)/(tv*0.82);
     S.r0=Math.max(rW,rH,0.3);cam.updateProjectionMatrix();
     if(!S.ready||!S.userZoomed){S.gr=S.r0;if(!S.ready)S.r=S.r0}
   }
@@ -190,7 +194,7 @@ window.ProductViewer=function(box,opt){
     var model=buildModel(parseGLB(buf),function(){});
     scene.add(model);
     var bb=new T.Box3().setFromObject(model),c=bb.getCenter(new T.Vector3());
-    S.target.copy(c);
+    S.target.copy(c);if(opt.fitToModel){var sz=bb.getSize(new T.Vector3());S.hw=Math.hypot(sz.x,sz.z)/2;S.hh=sz.y/2*1.15;fit();S.r=S.gr=S.r0}
     var ground=new T.Mesh(new T.PlaneGeometry(3,3),new T.ShadowMaterial({opacity:0.55}));
     ground.rotation.x=-Math.PI/2;ground.position.set(c.x,bb.min.y-0.0004,c.z);ground.receiveShadow=true;scene.add(ground);
     var gc=document.createElement('canvas');gc.width=gc.height=256;var gx=gc.getContext('2d'),gg=gx.createRadialGradient(128,128,0,128,128,128);

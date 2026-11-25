@@ -7,15 +7,24 @@
 'use strict';
 const {MB,M4,hex}=CE;const W=window.CW,P=window.CP;
 
-/* ---- product data — replace with the real products when material is ready ---- */
+/* ---- [V11] product data — taken from each product's own website (bridge/, smart-basket/, crossroad-site/PRODUCT01/) ---- */
 const PRODUCTS=[
-  {key:'p1',no:'01',zone:'STREET FOOD ZONE · 떡볶이 명가 앞',name:'PRODUCT 01 (가제)',line:'포장마차 거리의 떡볶이 명가 바로 앞, 보행 동선 옆에 설치된 제품 자리입니다. 실제 제품 자료가 오면 이 모델과 문구를 교체합니다.',feat:['교체 가능한 임시 3D 모델 (구) — assets/city/game.js PRODUCTS','라임·보라 조명의 원형 받침대 위에 설치','E로 관찰 · 드래그로 회전'],shape:'sphere'},
-  {key:'p2',no:'02',zone:'OLIVE YOUNG · 매장 안 쇼윈도',name:'PRODUCT 02 (가제)',line:'올리브영 매장 안, 유리 쇼윈도 바로 뒤의 조명 받침대에 놓인 제품 자리입니다. 매장에 들어가지 않고 유리 앞에서 바로 관찰할 수 있습니다. 실제 자료로 교체 예정입니다.',feat:['교체 가능한 임시 3D 모델 (육면체)','매장 내부 쇼윈도 · 유리 앞에서 E로 관찰','E로 관찰 · 드래그로 회전'],shape:'cube'},
-  {key:'p3',no:'03',zone:'INTERSECTION · 명동 교차로',name:'PRODUCT 03 (가제)',line:'교차로 보행 공간에 놓일 제품 자리입니다. 신호·횡단보도와의 연결을 빛의 흐름으로 보여줍니다.',feat:['교체 가능한 임시 3D 모델 (원뿔)','보행 신호 · 횡단보도와 연결된 데이터 흐름 표시','E로 관찰 · 드래그로 회전'],shape:'cone'}
+  {key:'p1',no:'01',name:'BRIDGE',sub:'Smart Communication Gate',place:'포장마차 거리 · 떡볶이 명가 카운터',
+   img:'bridge/assets/img/render-2.webp',href:'bridge/index.html',
+   problem:'상인과 관광객이 같은 언어를 쓰지 않아, 수량·맵기·옵션을 묻는 주문이 소통 오류로 끊어집니다.',
+   solve:'카운터 위 게이트형 기기가 카메라·마이크로 두 사람의 말과 행동을 읽고, MCU AI가 두 언어를 중재해 양면 디스플레이와 스피커로 전합니다. 상단 조명(흰색·보라·라임)이 상태를 알려 주고, 마지막 결정은 사람이 합니다.'},
+  {key:'p2',no:'02',name:'스마트 바구니 디스플레이',sub:'Smart Basket Display',place:'쇼핑몰 거리 · 올리브영 매장 안',
+   img:'smart-basket/images/IMG-01_hero.webp',href:'smart-basket/index.html',
+   problem:'말이 통하지 않는 외국인 방문객은 넓은 매장에서 원하는 코너를 찾거나 직원에게 도움을 청하기 어렵습니다.',
+   solve:'바구니 입구 테두리에 거는 가로형 디스플레이입니다. 다이얼로 코너를 고르면 화면이 아이콘과 화살표로 경로와 바구니 금액을 보여 주고, 주황색 호출 버튼을 누르면 가까운 직원에게 위치가 전달됩니다.'},
+  {key:'p3',no:'03',name:'EMERGENCY PATH SYSTEM',sub:'Future Emergency Path',place:'명동 교차로 · 남서쪽 코너',
+   img:'assets/products/emergency-path-card.webp',href:'product-crossroad.html',
+   problem:'밀집된 인파와 좁은 골목, 복잡한 교차로에서는 긴급 차량이 진입해야 하는 순간 사람들로 인해 통행이 지연됩니다.',
+   solve:'평소에는 바닥과 일체화되어 보행을 방해하지 않다가, AI와 센서가 긴급 차량 접근을 감지하면 양쪽 패널이 기둥으로 서고 투명판과 보라색 LED가 통행 경계를 만듭니다. 차량이 지나가면 원래 상태로 돌아갑니다.'}
 ];
 
 W.products.sort((a,b)=>a.key<b.key?-1:1);
-const G=window.CITY={state:'off',ready:false,found:new Set(),cam:{pos:[0,-2.3,-8.6],yaw:Math.PI,pitch:.3,fov:1.18},vel:[0,0],keys:{},look:{x:0,y:0}};
+const G=window.CITY={SPEED:3.12,STRIDE:.86,state:'off',ready:false,found:new Set(),cam:{pos:[0,-2.3,-8.6],yaw:Math.PI,pitch:.3,fov:1.18},vel:[0,0],keys:{},look:{x:0,y:0}};
 try{JSON.parse(localStorage.getItem('md2030_found')||'[]').forEach(k=>G.found.add(k))}catch(e){}
 const $=s=>document.querySelector(s);
 const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),lerp=(a,b,t)=>a+(b-a)*t,sm=(a,b,x)=>{const t=clamp((x-a)/(b-a));return t*t*(3-2*t)};
@@ -23,9 +32,82 @@ const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),lerp=(a,b,t)=>a+(b-a)*t,sm=(a
 /* ---------------- dynamic prop meshes ---------------- */
 const pm=new MB();const PR={};const part=(n,fn)=>{const i0=pm.i.length;fn();PR[n]={first:i0,count:pm.i.length-i0}};
 const w1=[1,1,1];
-part('pSphere',()=>{pm.sphere([0,.32,0],[.3,.3,.3],18,w1,[10,0,0,0]);pm.cyl([0,.02,0],[0,.06,0],.36,.36,28,w1.map(v=>v*.6),[10,0,0,0])});
-part('pCube',()=>{pm.box(-.2,.02,-.2,.2,.42,.2,w1,[10,0,0,0]);pm.box(-.205,.2,-.205,.205,.225,.205,[.8,.6,1],[9,2.5,0,0])});
-part('pCone',()=>{pm.cyl([0,.02,0],[0,.78,0],.3,.0,24,w1,[10,0,0,0]);pm.cyl([0,.02,0],[0,.08,0],.34,.32,24,w1.map(v=>v*.55),[10,0,0,0])});
+/* ---------------- [V11] real product models (low-poly, built from the product GLBs' proportions) ----------------
+   Units: metres. Local origin = bottom centre, local +z = product front.
+   01 BRIDGE            ← bridge/assets/model/bridge.glb (frame · top bar with double-sided display · camera · top/bottom LED)
+   02 SMART BASKET      ← smart-basket/models/3D-01_product.glb (280×90 mm body · display · dial + violet ring · lime call button · hook)
+   03 EMERGENCY PATH    ← crossroad-site/PRODUCT01/assets/models/emergency-path-device.glb (OPEN state: base · two vertical
+                          pillars · transparent acrylic bar · purple LED strip · end warning modules)                     */
+function hexa(P,col,mat){const c=[0,0,0];P.forEach(p=>{c[0]+=p[0]/8;c[1]+=p[1]/8;c[2]+=p[2]/8});
+  [[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]].forEach(f=>{const q=f.map(i=>P[i]);
+    const e1=[q[1][0]-q[0][0],q[1][1]-q[0][1],q[1][2]-q[0][2]],e2=[q[3][0]-q[0][0],q[3][1]-q[0][1],q[3][2]-q[0][2]];
+    let n=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+    const fc=[0,1,2].map(k=>(q[0][k]+q[1][k]+q[2][k]+q[3][k])/4);if(n[0]*(fc[0]-c[0])+n[1]*(fc[1]-c[1])+n[2]*(fc[2]-c[2])<0)n=n.map(v=>-v);
+    pm.quad(q[0],q[1],q[2],q[3],col,mat,undefined,n)})}
+const MET=[10,0,0,0],PLN=[0,0,0,0],EM=k=>[9,k,0,0];
+const C_FRAME=[.085,.088,.1],C_PANEL=[.12,.125,.14],C_GLASS=[.02,.02,.026],C_PUR=[.62,.32,1],C_LIME=[.77,1,.21],C_WHITE=[.92,.9,1];
+part('mBridge',()=>{
+  // slanted legs (wider foot, as in the render), 0.4 m tall in the GLB → scaled to the 500 mm spec height
+  [-1,1].forEach(s=>{const b=(x,y,z)=>[s*x,y,z];
+    hexa([b(.296,0,-.05),b(.346,0,-.05),b(.346,0,.05),b(.296,0,.05),b(.284,.5,-.016),b(.306,.5,-.016),b(.306,.5,.016),b(.284,.5,.016)],C_FRAME,MET)});
+  pm.box(-.296,.4,-.024,.296,.5,.024,C_FRAME,MET);                       // top frame
+  pm.box(-.278,.408,.0235,.278,.492,.0262,C_GLASS,EM(.18));              // display, customer side
+  pm.box(-.278,.408,-.0262,.278,.492,-.0235,C_GLASS,EM(.18));            // display, vendor side
+  [[-.2,.12],[.08,.17]].forEach(([x0,x1])=>{pm.box(x0,.44,.0263,x1,.452,.0268,C_WHITE,EM(.9));pm.box(x0,.44,-.0268,x1,.452,-.0263,C_WHITE,EM(.9))}); // translated text lines
+  pm.box(-.055,.405,-.034,.055,.495,.034,C_PANEL,MET);                   // centre module
+  [1,-1].forEach(s=>{pm.box(-.022,.415,s>0?.034:-.042,.022,.445,s>0?.042:-.034,[.22,.23,.27],MET);   // physical button
+    pm.cyl([-.042,.475,s*.034],[-.042,.475,s*.042],.006,.006,10,[.01,.01,.015],MET);pm.cyl([-.042,.475,s*.042],[-.042,.475,s*.043],.003,.003,8,C_PUR,EM(2))}); // camera
+  pm.box(-.29,.5,-.011,.29,.507,.011,C_PUR,EM(5));                       // top status light
+  pm.box(-.28,.394,-.01,.28,.4,.01,C_PUR,EM(3.2));                        // lower light line
+});
+part('mBasket',()=>{
+  // shopping basket (tapered, slatted walls) — carries the display on its front rim
+  const B=[[-.19,0,-.13],[.19,0,-.13],[.19,0,.13],[-.19,0,.13]],T=[[-.215,.22,-.155],[.215,.22,-.155],[.215,.22,.155],[-.215,.22,.155]];
+  const BC=[.2,.19,.24];
+  pm.quad(B[0],B[1],B[2],B[3],BC,PLN,undefined,[0,1,0]);
+  for(let i=0;i<4;i++){const a=B[i],b=B[(i+1)%4],c=T[(i+1)%4],d=T[i];
+    for(let k=0;k<5;k++){const v0=k/5+.03,v1=(k+1)/5-.03,L=(p,q,t)=>[p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t,p[2]+(q[2]-p[2])*t];
+      pm.quad(L(a,d,v0),L(b,c,v0),L(b,c,v1),L(a,d,v1),BC,PLN)}
+    [0,.33,.66,1].forEach(t=>{const L=(p,q)=>[p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t,p[2]+(q[2]-p[2])*t];const p0=L(a,b),p1=L(d,c);pm.cyl(p0,p1,.006,.006,4,BC,PLN,false)})}
+  [[-.215,-.155,.215,-.145],[-.215,.145,.215,.155],[-.215,-.155,-.205,.155],[.205,-.155,.215,.155]].forEach(([x0,z0,x1,z1])=>pm.box(x0,.21,z0,x1,.23,z1,[.26,.25,.3],PLN));
+  // a few cosmetics inside
+  [[-.12,-.05,.05,.12,'#ff8fb1'],[-.02,.03,.04,.16,'#ffffff'],[.08,-.04,.05,.1,'#b6a4ff'],[.13,.06,.035,.14,'#7fd6c2']].forEach(([x,z,r,h,c])=>pm.box(x-r,.004,z-r*.7,x+r,h,z+r*.7,hex(c),PLN));
+});
+part('mBasketDisp',()=>{
+  // [V12] SMART BASKET DISPLAY (final design) 280 × 90 × 29 mm — hangs on the OUTSIDE of the basket's front wall.
+  // Local origin = centre of the top edge, +z = front (screen side), -z = basket side. Two hooks go over the rim; screen faces the customer.
+  const C_AMB=[.96,.44,.1];
+  pm.box(-.14,-.09,0,.14,0,.029,[.1,.1,.125],MET);                           // body
+  pm.box(-.14,-.016,0,.14,0,.029,[.2,.12,.42],MET);                          // violet top band
+  pm.box(-.09,-.078,.0291,.074,-.02,.0296,C_GLASS,EM(.2));                   // display
+  pm.box(-.083,-.058,.0297,-.064,-.038,.0299,C_WHITE,EM(1.4));               // cart icon
+  pm.box(-.058,-.056,.0297,-.004,-.036,.0299,C_WHITE,EM(1.6));               // price 48,000
+  pm.box(-.0005,-.075,.0297,.0005,-.023,.0299,C_WHITE,EM(1.2));              // divider
+  pm.box(.011,-.06,.0297,.035,-.036,.0299,C_WHITE,EM(1.4));                  // face / corner icon
+  pm.box(.045,-.049,.0297,.068,-.043,.0299,C_WHITE,EM(1.6));                 // arrow
+  pm.cyl([.107,-.045,.029],[.107,-.045,.046],.02,.019,18,[.16,.16,.2],MET);  // dial
+  pm.cyl([.107,-.045,.0461],[.107,-.045,.0472],.0172,.0172,18,C_PUR,EM(4));  // dial ring glow (violet)
+  pm.cyl([.107,-.045,.0473],[.107,-.045,.0478],.012,.012,14,[.12,.12,.15],MET);
+  pm.cyl([-.115,-.045,.029],[-.115,-.045,.0345],.011,.011,14,C_AMB,EM(2.2)); // call (bell) button — amber/orange
+  [-1,1].forEach(s=>{const x=s*.1;                                           // two hooks over the rim
+    pm.box(x-.017,0,-.034,x+.017,.012,.029,[.2,.12,.42],MET);                // bridge over the rim
+    pm.box(x-.017,-.05,-.034,x+.017,.012,-.026,[.06,.06,.08],MET)});         // inner leg
+  pm.cyl([0,-.05,0],[0,-.05,-.004],.007,.007,10,[.01,.01,.015],MET);         // recognition camera (rear face)
+});
+part('mDevice',()=>{
+  // EMERGENCY PATH device, OPEN state (2.79 m long, 0.36 m deep)
+  hexa([[-1.394,0,-.181],[1.394,0,-.181],[1.394,0,.181],[-1.394,0,.181],[-1.37,.065,-.165],[1.37,.065,-.165],[1.37,.065,.165],[-1.37,.065,.165]],[.05,.05,.06],MET); // base + housings
+  [-1,1].forEach(s=>{const b=(x,y,z)=>[s*x,y,z];
+    hexa([b(.9,.065,-.15),b(1.36,.065,-.15),b(1.36,.065,.15),b(.9,.065,.15),b(.95,.17,-.105),b(1.31,.17,-.105),b(1.31,.17,.105),b(.95,.17,.105)],[.055,.055,.065],MET); // warning module
+    hexa([b(.932,.122,-.13),b(1.328,.122,-.13),b(1.328,.122,.13),b(.932,.122,.13),b(.94,.136,-.126),b(1.32,.136,-.126),b(1.32,.136,.126),b(.94,.136,.126)],C_WHITE,EM(3)); // LED ring
+    pm.box(s>0?.752:-.83,.065,-.105,s>0?.83:-.752,.86,.105,[.045,.045,.055],MET);   // vertical pillar (side panel raised 90°)
+    pm.box(s>0?.745:-.837,.06,-.112,s>0?.837:-.745,.075,.112,[.07,.07,.08],MET);    // hinge foot
+    pm.box(s>0?.752:-.758,.7,-.03,s>0?.758:-.752,.79,.03,C_PUR,EM(1.6))});          // acrylic slot glow
+  pm.box(-.79,.065,-.013,.79,.077,.013,C_PUR,EM(6));                                 // LED strip
+  pm.box(-.86,.018,.1815,.86,.04,.1825,C_PUR,EM(3.5));pm.box(-.86,.018,-.1825,.86,.04,-.1815,C_PUR,EM(3.5)); // side glow
+  pm.box(-.752,.7,-.022,.752,.704,.022,C_PUR,EM(3));pm.box(-.752,.786,-.022,.752,.79,.022,C_PUR,EM(3));      // acrylic edges
+});
+part('mAcrylic',()=>pm.box(-.752,.704,-.021,.752,.786,.021,[1,1,1],EM(1)));          // drawn additively → transparent
 part('ring',()=>{for(let s=0;s<48;s++){const a0=s/48*Math.PI*2,a1=(s+1)/48*Math.PI*2;pm.quad([Math.cos(a0)*.96,0,Math.sin(a0)*.96],[Math.cos(a1)*.96,0,Math.sin(a1)*.96],[Math.cos(a1),0,Math.sin(a1)],[Math.cos(a0),0,Math.sin(a0)],w1,[9,2,0,0],undefined,[0,1,0])}});
 part('dot',()=>pm.sphere([0,0,0],[.045,.045,.045],6,w1,[9,4,0,0]));
 part('sigHead',()=>pm.box(-.16,-.45,-.12,.16,.45,.12,[.12,.12,.15],[10,0,0,0]));
@@ -79,25 +161,30 @@ G.init=function(canvas){
 function bindUI(){
   addEventListener('keydown',e=>{const k=e.key.toLowerCase();G.keys[k]=true;
     if(G.state==='explore'&&['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
-    if(k==='e'){if(G.state==='explore'&&G.target!=null)inspect(G.target);else if(G.state==='inspect')back()}
-    if(k==='escape'&&G.state==='inspect')back();
+    if(k==='e'){if(G.state==='explore'&&G.target!=null)openPanel(G.target);else if(G.state==='panel')closePanel()}
+    if(k==='escape'&&G.state==='panel')closePanel();
     if((G.state==='explore'||G.state==='return')&&['1','2','3','0'].includes(k))NAV.select(k==='0'?null:+k-1)});
   addEventListener('keyup',e=>{G.keys[e.key.toLowerCase()]=false});
   addEventListener('blur',()=>{G.keys={}});
   const cv=G.r?G.r.cv:$('#ctyCv');
   $('#ctyClick').addEventListener('click',()=>enterExplore());
   document.addEventListener('pointerlockchange',()=>{G.locked=document.pointerLockElement===cv;
-    if(!G.locked&&G.state==='explore'){$('#ctyClick').classList.add('show');$('#ctyClick b').textContent='CLICK TO RESUME'}});
-  addEventListener('mousemove',e=>{if(G.state==='explore'&&G.locked){G.cam.yaw-=e.movementX*.0021;G.cam.pitch=clamp(G.cam.pitch-e.movementY*.0021,-1.2,1.25)}});
-  // drag-look fallback (no pointer lock) + drag-rotate in the product viewer
-  let drag=null;cv.addEventListener('pointerdown',e=>{if(G.state==='inspect'||(G.state==='explore'&&!G.locked)){drag={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId)}});
-  cv.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};
-    if(G.state==='inspect'){G.spin.y+=dx*.01;G.spin.x=clamp(G.spin.x+dy*.01,-1.1,1.1)}else{G.cam.yaw-=dx*.004;G.cam.pitch=clamp(G.cam.pitch-dy*.004,-1.2,1.25)}});
+    const h=$('#ctyLockHint');if(h)h.classList.toggle('show',!G.locked&&G.state==='explore'&&!G.paused)});
+  document.addEventListener('pointerlockerror',()=>{G.noLock=true;const h=$('#ctyLockHint');if(h&&G.state==='explore')h.classList.add('show')});
+  // mouse look: pointer-lock (movementX/Y); look sensitivity is kept separate from the walking speed
+  G.lookSens=.0021;
+  addEventListener('mousemove',e=>{if(G.state==='explore'&&G.locked&&!G.paused){G.cam.yaw-=e.movementX*G.lookSens;G.cam.pitch=clamp(G.cam.pitch-e.movementY*G.lookSens,-1.2,1.25)}});
+  // click: open the product in front of you, otherwise (re)capture the mouse. Drag-look stays as a fallback when pointer lock is refused.
+  let drag=null;cv.addEventListener('pointerdown',e=>{if(G.state!=='explore'||G.paused||e.button!==0)return;
+    if(G.target!=null){openPanel(G.target);return}
+    if(!G.locked){requestLock();drag={x:e.clientX,y:e.clientY};try{cv.setPointerCapture(e.pointerId)}catch(_){}}});
+  cv.addEventListener('pointermove',e=>{if(!drag||G.locked)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};
+    G.cam.yaw-=dx*.004;G.cam.pitch=clamp(G.cam.pitch-dy*.004,-1.2,1.25)});
   cv.addEventListener('pointerup',()=>{drag=null});
-  addEventListener('wheel',e=>{if(G.state==='explore'||G.state==='inspect')e.preventDefault()},{passive:false});
-  $('#ctyBack').addEventListener('click',()=>back());
-  $('#ctyInteract').addEventListener('click',()=>{G.demo=!G.demo;$('#ctyInteract').classList.toggle('on',G.demo);$('#ctyInteract span').textContent=G.demo?'STOP':'INTERACT'});
-  $('#ctySubway').addEventListener('click',()=>leave());
+  addEventListener('wheel',e=>{if(G.state==='explore'||G.state==='panel')e.preventDefault()},{passive:false});
+  $('#ctyBack').addEventListener('click',()=>closePanel());
+  const pc=$('#ctyPanelClose');if(pc)pc.addEventListener('click',()=>closePanel());
+  const sub=$('#ctySubway');if(sub)sub.addEventListener('click',()=>leave());
   document.querySelectorAll('#ctyNav [data-dest]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=+b.dataset.dest;NAV.select(NAV.dest===i?null:i)}));
   updCount();
 }
@@ -108,20 +195,42 @@ function enterExplore(){if(!G.ready)return;
 }
 function leave(){try{document.exitPointerLock()}catch(e){}G.state='off';G.inStairs=false;document.documentElement.classList.remove('city-lock');
   $('#ctyPanel').classList.remove('show');G.r.dim=0;scrollTo({top:0,behavior:'smooth'})}
+G.requestLock=()=>requestLock();
+function requestLock(){if(!G.r)return;try{const p=G.r.cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{G.noLock=true;const h=$('#ctyLockHint');if(h)h.classList.add('show')})}catch(e){G.noLock=true}}
+/* [V11] direct start — no stairs / no "CLICK TO EXPLORE" gate: the player appears at the top of the subway exit, ready to walk */
+G.spawn={pos:null,yaw:Math.PI,pitch:.03};
+G.startDirect=function(o={}){if(!G.ready)return false;const c=G.cam;
+  if(!G.spawn.pos){const z=1.4;G.spawn.pos=[0,W.height(0,z)+1.62,z]}
+  if(o.reset||G.state==='off'||G.state==='stairs'||G.state==='ground'){c.pos=G.spawn.pos.slice();c.yaw=G.spawn.yaw;c.pitch=G.spawn.pitch;G.gy=null;G.walk=0}
+  G.vel=[0,0];G.keys={};G.state='explore';G.paused=false;G.hudT=performance.now();
+  document.documentElement.classList.add('city-lock');
+  ['#ctyClick','#ctyPanel'].forEach(q=>{const el=$(q);if(el)el.classList.remove('show')});const fu=$('#ctyFuture');if(fu)fu.style.opacity='0';
+  const r=G.r;r.fade=o.fade===false?1:Math.min(r.fade||0,.15);G.fadeIn=true;r.exposure=1.05;r.flash=0;r.dim=0;
+  if(o.lock!==false)requestLock();
+  const h=$('#ctyLockHint');if(h)h.classList.toggle('show',!document.pointerLockElement);
+  return true};
+/* pause: stops movement, look and (via game.html) the render loop — used when the game is hidden / exited */
+G.pause=function(){G.paused=true;G.keys={};G.vel=[0,0];try{if(document.pointerLockElement)document.exitPointerLock()}catch(e){}
+  if(G.state==='panel'){$('#ctyPanel').classList.remove('show');G.state='explore'}
+  const h=$('#ctyLockHint');if(h)h.classList.remove('show')};
 
-/* ---------------- product viewer ---------------- */
+/* ---------------- [V11] product info panel ----------------
+   click (or E) near a product → small glass panel: image · name · place · problem · how it solves it · VIEW PRODUCT.
+   While it is open, walking and mouse-look are paused; closing it resumes from the same spot and view. */
 G.spin={x:0,y:0};
-function inspect(i){const p=W.products[i];G.state='inspect';G.insp=i;G.spin={x:.15,y:0};G.demo=false;$('#ctyInteract').classList.remove('on');$('#ctyInteract span').textContent='INTERACT';
-  try{document.exitPointerLock()}catch(e){}
+function openPanel(i){if(G.state!=='explore')return;const d=PRODUCTS[i];G.state='panel';G.insp=i;G.keys={};G.vel=[0,0];
   G.saved={pos:G.cam.pos.slice(),yaw:G.cam.yaw,pitch:G.cam.pitch};
-  const dx=G.cam.pos[0]-p.pos[0],dz=G.cam.pos[2]-p.pos[2],l=Math.hypot(dx,dz)||1;
-  G.insT={pos:[p.pos[0]+dx/l*1.35,p.pos[1]+.42,p.pos[2]+dz/l*1.35],yaw:Math.atan2(dx/l,dz/l),pitch:-.22,t:0};
-  const d=PRODUCTS[i];$('#ctyNo').textContent='PRODUCT '+d.no;$('#ctyZone').textContent=d.zone;$('#ctyName').textContent=d.name;$('#ctyLine').textContent=d.line;
-  $('#ctyFeat').innerHTML=d.feat.map(f=>`<li>${f}</li>`).join('');$('#ctyPanel').classList.add('show');$('#ctyPrompt').classList.remove('show');
+  try{document.exitPointerLock()}catch(e){}
+  const im=$('#ctyImg');if(im){im.src=d.img;im.alt=d.name+' 제품 렌더링'}
+  $('#ctyNo').textContent='PRODUCT '+d.no+' · '+d.sub.toUpperCase();$('#ctyZone').textContent=d.place;$('#ctyName').textContent=d.name;
+  const pb=$('#ctyProblem');if(pb)pb.textContent=d.problem;const sv=$('#ctySolve');if(sv)sv.textContent=d.solve;
+  const lk=$('#ctyView');if(lk){lk.href=d.href;lk.setAttribute('aria-label',d.name+' 제품 자세히 보기')}
+  $('#ctyPanel').classList.add('show');$('#ctyPrompt').classList.remove('show');const h=$('#ctyLockHint');if(h)h.classList.remove('show');
   if(!G.found.has(d.key)){G.found.add(d.key);try{localStorage.setItem('md2030_found',JSON.stringify([...G.found]))}catch(e){}updCount(true)}
-}
-function back(){if(G.state!=='inspect')return;G.state='return';G.retT=0;G.demo=false;$('#ctyPanel').classList.remove('show');
-  try{const p=G.r.cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
+  setTimeout(()=>{const c=$('#ctyPanelClose');if(c)try{c.focus({preventScroll:true})}catch(_){}},60)}
+function closePanel(){if(G.state!=='panel')return;$('#ctyPanel').classList.remove('show');G.state='explore';G.keys={};G.vel=[0,0];
+  const S=G.saved;if(S){G.cam.pos=S.pos.slice();G.cam.yaw=S.yaw;G.cam.pitch=S.pitch}
+  requestLock()}   // the close click is a user gesture → mouse control comes back immediately
 function updCount(bump){const n=G.found.size;const el=$('#ctyCount');if(!el)return;el.textContent=String(n).padStart(2,'0');
   if(bump){el.parentElement.classList.remove('bump');void el.offsetWidth;el.parentElement.classList.add('bump')}
   if(bump&&n===3){const c=$('#ctyDone');c.classList.add('show');setTimeout(()=>c.classList.remove('show'),5200)}}
@@ -141,7 +250,8 @@ G.frame=function(time,p,visible){
   // adaptive resolution: keep the frame rate smooth on slower GPUs
   G.acc=(G.acc||0)+dt;G.fr=(G.fr||0)+1;if(G.acc>2.5){const f=G.fr/G.acc;G.lo=f<32?(G.lo||0)+1:0;G.hi=f>58?(G.hi||0)+1:0;if(G.lo>=2){r.scale=Math.max(.6,r.scale-.1);G.lo=0}else if(G.hi>=3){r.scale=Math.min(1,r.scale+.1);G.hi=0}G.acc=0;G.fr=0}
   // ---- state from scroll (only while not exploring) ----
-  if(G.state!=='explore'&&G.state!=='inspect'&&G.state!=='return'){
+  if(G.fadeIn){r.fade=Math.min(1,r.fade+dt/.3);if(r.fade>=1)G.fadeIn=false}
+  if(G.state!=='explore'&&G.state!=='panel'){
     if(!visible){G.state='off';return}
     const s=sm(.04,.9,p),zB=-8.7,zT=1.4;
     const z=lerp(zB,zT,s),ground=W.height(0,z);
@@ -156,25 +266,24 @@ G.frame=function(time,p,visible){
   }
   // ---- free exploration ----
   if(G.state==='explore'){
-    const k=G.keys,run=k.shift?4.3:2.15;let fx=(k.w||k.arrowup?1:0)-(k.s||k.arrowdown?1:0),sx=(k.d||k.arrowright?1:0)-(k.a||k.arrowleft?1:0);
-    if(G.noLock&&!G.locked){} // drag-look mode still allows keys
+    // [V11] walk 2.15 → 3.12 m/s (×1.45), run 4.3 → 6.24 m/s; diagonal input normalised; frame-rate independent (dt)
+    const k=G.keys,run=G.paused?0:(k.shift?G.SPEED*2:G.SPEED);let fx=(k.w||k.arrowup?1:0)-(k.s||k.arrowdown?1:0),sx=(k.d||k.arrowright?1:0)-(k.a||k.arrowleft?1:0);
     const l=Math.hypot(fx,sx)||1;fx/=l;sx/=l;const yw=c.yaw,F=[-Math.sin(yw),-Math.cos(yw)],Rt=[Math.cos(yw),-Math.sin(yw)];
-    const tv=[(F[0]*fx+Rt[0]*sx)*run,(F[1]*fx+Rt[1]*sx)*run];const a=1-Math.exp(-dt*(fx||sx?7:14));
-    G.vel=[lerp(G.vel[0],tv[0],a),lerp(G.vel[1],tv[1],a)];
-    let nx=c.pos[0]+G.vel[0]*dt,nz=c.pos[2]+G.vel[1]*dt;[nx,nz]=collide(nx,nz,.32);
+    const tv=[(F[0]*fx+Rt[0]*sx)*run,(F[1]*fx+Rt[1]*sx)*run];const a=1-Math.exp(-dt*(fx||sx?9:20));   // quick start, very short stop
+    G.vel=[lerp(G.vel[0],tv[0],a),lerp(G.vel[1],tv[1],a)];if(!fx&&!sx&&Math.hypot(G.vel[0],G.vel[1])<.05)G.vel=[0,0];
+    // collision in sub-steps (≤ 0.12 m) so the faster walk can never tunnel through thin walls / rails
+    let nx=c.pos[0],nz=c.pos[2];{const mx=G.vel[0]*dt,mz=G.vel[1]*dt,n=Math.max(1,Math.ceil(Math.hypot(mx,mz)/.12));for(let q=0;q<n;q++){nx+=mx/n;nz+=mz/n;[nx,nz]=collide(nx,nz,.32)}}
     const spd=Math.hypot(G.vel[0],G.vel[1]);G.walk=(G.walk||0)+spd*dt;
     const gy=W.height(nx,nz)+1.62;G.gy=G.gy==null?gy:lerp(G.gy,gy,1-Math.exp(-dt*12));
-    c.pos=[nx,G.gy+Math.abs(Math.sin(G.walk/.72*Math.PI))*.03*Math.min(1,spd/2),nz];
+    // head bob: stride length scaled with the new pace (cadence ≈ 2 steps/s), amplitude capped at 2.4 cm
+    c.pos=[nx,G.gy+Math.abs(Math.sin(G.walk/G.STRIDE*Math.PI))*.024*Math.min(1,spd/G.SPEED),nz];
     const hint=$('#ctyKeys');if(hint)hint.classList.toggle('mini',performance.now()-G.hudT>9000);
   }
-  if(G.state==='inspect'){const T=G.insT;T.t=Math.min(1,T.t+dt*1.4);const e=sm(0,1,T.t);
-    c.pos=c.pos.map((v,i)=>lerp(v,T.pos[i],e*.2+.02));c.yaw=lerpA(c.yaw,T.yaw,e*.2+.02);c.pitch=lerp(c.pitch,T.pitch,e*.2+.02);r.dim=lerp(r.dim,.55,.08)}
-  if(G.state==='return'){const S=G.saved;G.retT+=dt;c.pos=c.pos.map((v,i)=>lerp(v,S.pos[i],.12));c.yaw=lerpA(c.yaw,S.yaw,.12);c.pitch=lerp(c.pitch,S.pitch,.12);r.dim=lerp(r.dim,0,.12);
-    if(G.retT>.7){G.state='explore';G.gy=null}}
-  if(G.state==='explore')r.dim=lerp(r.dim,0,.1);
+  if(G.state==='panel')r.dim=lerp(r.dim,.32,1-Math.exp(-dt*10));
+  if(G.state==='explore')r.dim=lerp(r.dim,0,1-Math.exp(-dt*10));
   // indoor exposure (Olive Young is brighter and cleaner)
   const inside=W.indoor(c.pos[0],c.pos[2])?1:0;r.indoor=lerp(r.indoor,inside,1-Math.exp(-dt*3));
-  if(G.state==='explore'||G.state==='inspect'||G.state==='return'){r.exposure=lerp(r.exposure,lerp(1.05,.62,r.indoor),.05);r.fade=1;r.flash=lerp(r.flash,0,.1)}
+  if(G.state==='explore'||G.state==='panel'){r.exposure=lerp(r.exposure,lerp(1.05,.62,r.indoor),.05);if(!G.fadeIn)r.fade=1;r.flash=lerp(r.flash,0,.1)}
 
   // ---- world simulation ----
   P.update(dt,time);
@@ -185,9 +294,10 @@ G.frame=function(time,p,visible){
   G.target=null;let near=null;
   W.products.forEach((pr,i)=>{const dx=pr.pos[0]-c.pos[0],dz=pr.pos[2]-c.pos[2],d=Math.hypot(dx,dz);pr.d=d;
     const fwd=[-Math.sin(c.yaw),-Math.cos(c.yaw)],dot=(dx*fwd[0]+dz*fwd[1])/(d||1);
-    pr.glow=lerp(pr.glow||0,(G.state==='inspect'&&G.insp===i)?1:sm(4.2,2.2,d),.08);
-    if(G.state==='explore'&&d<2.6&&dot>.8){G.target=i}if(!near||d<near.d)near=pr});
+    pr.glow=lerp(pr.glow||0,(G.state==='panel'&&G.insp===i)?1:sm(4.6,2.4,d),.08);
+    if(G.state==='explore'&&!G.paused&&d<(pr.reach||2.9)&&dot>.72){G.target=i}if(!near||d<near.d)near=pr});
   $('#ctyPrompt').classList.toggle('show',G.target!=null&&G.state==='explore');
+  {const cr=$('.cty-cross');if(cr)cr.classList.toggle('on',G.target!=null&&G.state==='explore')}
 
   // ---- draw list ----
   const D=[];const I=M4.ident();
@@ -198,19 +308,20 @@ G.frame=function(time,p,visible){
   r.lights=W.lights.concat(dyn);
   // people
   P.draws(c,null,D);
-  // products
-  W.products.forEach((pr,i)=>{const sh=PRODUCTS[i].shape,nm=sh==='sphere'?'pSphere':sh==='cube'?'pCube':'pCone';
-    const ins=G.state==='inspect'&&G.insp===i;const sp=ins?G.spin:{x:0,y:0};const auto=time*(G.demo&&ins?1.6:.25);
-    const bob=Math.sin(time*1.4+i)*.02+(G.demo&&ins?.06*Math.sin(time*3):0);
-    const model=M4.chain(M4.T(pr.pos[0],pr.pos[1]-.32+bob,pr.pos[2]),M4.T(0,.35,0),M4.RX(sp.x),M4.RY(sp.y+auto),M4.T(0,-.35,0));
-    D.push({mesh:G.props,...PR[nm],model,tint:[.78,.72,.95],hl:pr.glow*.9,hlc:G.target===i||ins?[.77,1,.21]:[.62,.38,1],cull:false});
-    if(!ins){const fd=G.found.has(PRODUCTS[i].key),hb=pr.pos[1]+.95+Math.sin(time*2+i)*.06,kk=(fd?.35:1)*(NAV.dest===i?1.4:1);
+  // products — [V11] installed real-product models (static, on the ground / counter / podium). The pulse ring and the
+  // beacon stay, but the beacon floats well above the product and the rim highlight is kept low so the product stays readable.
+  W.products.forEach((pr,i)=>{const sel=G.state==='panel'&&G.insp===i,tgt=G.target===i;
+    const hl=pr.glow*.28+(tgt?.18:0),hlc=tgt||sel?[.77,1,.21]:[.62,.38,1];
+    (pr.models||[]).forEach(md=>{const model=M4.chain(M4.T(md.p[0],md.p[1],md.p[2]),M4.RY(md.ry||0),M4.RX(md.rx||0),M4.S(md.s||1,md.s||1,md.s||1));
+      D.push({mesh:G.props,...PR[md.part],model,hl:md.main?hl:hl*.5,hlc,cull:false});
+      if(md.part==='mDevice')D.push({mesh:G.props,...PR.mAcrylic,model,tint:[.3,.2,.5],blend:'add',noRefl:true,cull:false})});
+    if(!sel){const fd=G.found.has(PRODUCTS[i].key),hb=pr.pos[1]+(pr.beaconH||1.0)+Math.sin(time*2+i)*.05,kk=(fd?.35:1)*(NAV.dest===i?1.4:1);
       D.push({mesh:G.props,...PR.beacon,model:M4.chain(M4.T(pr.pos[0],hb,pr.pos[2]),M4.RY(time*1.5)),tint:[.77*kk,1*kk,.21*kk],noRefl:true,cull:false})}
-    if(pr.glow>.05||(G.demo&&ins)){const pulse=(time*.7)%1,k=G.demo&&ins?1:pr.glow;
-      D.push({mesh:G.props,...PR.ring,model:M4.chain(M4.T(pr.pos[0],(pr.pos[1]-.32)*0+W.height(pr.pos[0],pr.pos[2])+.02,pr.pos[2]),M4.S(.5+pulse*1.6,1,.5+pulse*1.6)),tint:[.77*(1-pulse)*k,1*(1-pulse)*k,.21*(1-pulse)*k],blend:'add',noRefl:true,cull:false})}
+    if(pr.glow>.05){const pulse=(time*.7)%1,k=pr.glow,rs=pr.ringR||1;
+      D.push({mesh:G.props,...PR.ring,model:M4.chain(M4.T(pr.pos[0],W.height(pr.pos[0],pr.pos[2])+.02,pr.pos[2]),M4.S((.5+pulse*1.6)*rs,1,(.5+pulse*1.6)*rs)),tint:[.77*(1-pulse)*k,1*(1-pulse)*k,.21*(1-pulse)*k],blend:'add',noRefl:true,cull:false})}
   });
   // product 03 — data flow linking the device to the walk signal and the crosswalk
-  {const p3=W.products[2],k=Math.max(p3.glow,(G.state==='inspect'&&G.insp===2)?1:0)*(G.demo&&G.insp===2?1.6:1);
+  {const p3=W.products[2],k=Math.max(p3.glow,(G.state==='panel'&&G.insp===2)?1:0);
     if(k>.05){const path=[[p3.pos[0],.9,p3.pos[2]],[-7.6,2.6,57.6],[-6.4,.05,58.9],[6.4,.05,58.9],[6.4,.05,65.2]];
       for(let j=0;j<18;j++){const u=((time*.35+j/18)%1);const seg=u*(path.length-1),si=Math.floor(seg),t=seg-si;const a=path[si],b=path[Math.min(path.length-1,si+1)];
         D.push({mesh:G.props,...PR.flow,model:M4.T(lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)),tint:[k,k,k],blend:'add',cull:false})}}}
@@ -240,7 +351,7 @@ G.frame=function(time,p,visible){
 
   if(window.SKIPDRAW)D.splice(0,D.length,...D.filter(window.SKIPDRAW));
   r.render(c,time,D);
-  if(G.state==='explore'||G.state==='inspect'||G.state==='return'){NAV.update(time);compass();NAV.draw()}
+  if(G.state==='explore'||G.state==='panel'){NAV.update(time);compass();NAV.draw()}
 };
 /* =====================================================================
    NAVIGATION — walk grid (0.5 m) built from the floor rectangles minus the colliders
@@ -283,7 +394,7 @@ NAV.update=function(time){if(NAV.dest==null)return;const c=G.cam,p=W.products[NA
   if(NAV.path){NAV.path[0]=[c.pos[0],c.pos[2]];let d=0;for(let k=1;k<NAV.path.length;k++)d+=Math.hypot(NAV.path[k][0]-NAV.path[k-1][0],NAV.path[k][1]-NAV.path[k-1][1]);NAV.dist=d}
   const arrived=p.d<2.4;const nxt=NAV.path&&NAV.path[1]?NAV.path[1]:[p.pos[0],p.pos[2]];
   const b=Math.atan2(nxt[0]-c.pos[0],nxt[1]-c.pos[2]),hd=Math.atan2(-Math.sin(c.yaw),-Math.cos(c.yaw));NAV.rel=b-hd;
-  $('#ctyNavD').innerHTML=NAV.fail&&!NAV.path?'NO ROUTE':arrived?'<b>ARRIVED</b> · PRESS E':`PRODUCT ${PRODUCTS[NAV.dest].no} · <b>${Math.round(NAV.dist)} m</b>`;
+  $('#ctyNavD').innerHTML=NAV.fail&&!NAV.path?'NO ROUTE':arrived?'<b>ARRIVED</b> · CLICK / E':`PRODUCT ${PRODUCTS[NAV.dest].no} · <b>${Math.round(NAV.dist)} m</b>`;
   $('#ctyNavA').style.transform=`rotate(${NAV.rel}rad)`;$('#ctyNavA').style.opacity=arrived?.3:1};
 NAV.draw=function(){const cv=$('#ctyMap');if(!cv)return;const dpr=Math.min(2,devicePixelRatio||1),S=cv.clientWidth||180;if(cv.width!==S*dpr){cv.width=cv.height=S*dpr}
   const x=cv.getContext('2d'),c=G.cam,ppm=3.2*dpr,h=S*dpr/2;x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,cv.width,cv.height);

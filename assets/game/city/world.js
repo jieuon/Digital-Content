@@ -370,7 +370,10 @@ collide(-64,-24,-58,124,'edge');collide(58,-24,64,124,'edge');collide(-64,-26,64
   mb.box(10.4,0,50.2,11.4,1.05,53,hex('#ffffff'),m(0));mb.box(10.3,1.05,50.1,11.5,1.12,53.1,hex('#9be15d'),m(MAT.emis,.8));collide(10.4,50.2,11.4,53,'shelf');
   // ---- product 02 window display: lit podium + back panel, just inside the glass, seen from the street ----
   const px=10.55,pz=47.6;
-  W.products.push({id:0,key:'p2',pos:[px,1.02,pz],zone:'올리브영 매장 안 · 쇼윈도',nav:[HW-.9,47.6]});
+  // [V11] the podium now carries a real shopping basket with the SMART BASKET DISPLAY hooked on its front rim (facing the street)
+  W.products.push({id:0,key:'p2',pos:[px,.76,pz],zone:'올리브영 매장 안 · 쇼윈도',nav:[HW-.9,47.6],beaconH:.95,ringR:.8,reach:3.0,
+    models:[{part:'mBasket',p:[px+.02,.76,pz],ry:-Math.PI/2,s:1.15,main:true},
+            {part:'mBasketDisp',p:[px+.02-.158*1.15,.76+.232*1.15,pz],ry:-Math.PI/2,s:1.15,main:true}]});
   mb.cyl([px,0,pz],[px,.72,pz],.5,.46,28,hex('#f2f4ee'),m(0));mb.cyl([px,.72,pz],[px,.76,pz],.48,.48,28,hex('#c5ff35'),m(MAT.emis,1.8));
   mb.box(11.55,0,46.3,11.7,2.7,48.9,hex('#e9f3e4'),m(0));dm.quad([11.54,.4,48.7],[11.54,.4,46.5],[11.54,2.5,46.5],[11.54,2.5,48.7],hex('#dfffc0'),m(MAT.emis,.32),undefined,[-1,0,0]);
   mb.box(10.0,3.9,47.0,11.1,4.38,48.2,hex('#1c1b22'),m(MAT.metal));mb.box(10.2,3.88,47.2,10.9,3.9,48.0,hex('#ffffff'),m(MAT.emis,2));
@@ -440,10 +443,11 @@ W.steam=[];W.vendors=[];
   for(let i=0;i<7;i++)mb.sphere([-21.4+i*.43,2.72+Math.sin(i)*.05,23.45],[.07,.09,.07],6,hex('#ffcf8a'),m(MAT.emis,7));
   light([-20.1,2.4,23.6],'#ff9a50',6,1.8,'stall');
   // ---- product 01: installed right in front of the hero stall, on the pedestrian side, not in the walking line ----
-  W.products.push({id:1,key:'p1',pos:[-20.1,.95,24.15],zone:'포장마차 거리 · 떡볶이 명가 앞'});
-  mb.cyl([-20.1,0,24.15],[-20.1,.6,24.15],.46,.42,24,hex('#1c1a24'),m(MAT.metal));mb.cyl([-20.1,.6,24.15],[-20.1,.64,24.15],.44,.44,24,hex('#c5ff35'),m(MAT.emis,1.6));
-  dm.quad([-20.85,.008,24.9],[-19.35,.008,24.9],[-19.35,.008,23.4],[-20.85,.008,23.4],hex('#2b2140'),m(MAT.ground,0,2,0));
-  collide(-20.6,23.65,-19.6,24.65,'prod');light([-20.1,2.2,24.6],'#b48cff',4.5,1.2,'prod');
+  // [V11] BRIDGE (600 × 500 mm gate) stands on the counter's front edge: vendor behind, customers in front
+  W.products.push({id:1,key:'p1',pos:[-19.6,.96,22.98],zone:'포장마차 거리 · 떡볶이 명가 카운터',nav:[-19.6,24.4],beaconH:.95,ringR:.8,reach:2.9,
+    models:[{part:'mBridge',p:[-19.6,.96,22.98],ry:0,s:1.15,main:true}]});
+  dm.quad([-20.85,.008,24.9],[-18.35,.008,24.9],[-18.35,.008,23.4],[-20.85,.008,23.4],hex('#2b2140'),m(MAT.ground,0,2,0));
+  light([-19.6,2.1,24.1],'#b48cff',4.5,1.1,'prod');
   // ---- main street north: staggered market spine on both sides of the promenade ----
   for(let z=71;z<106;z+=3.1+R()*.6){const j=(R()-.5)*.4;stall(-2.4+j,z,-1,{axis:'x',w:2.0+R()*.5});if(R()<.8)stall(2.4-j,z+1.4,1,{axis:'x',w:2.0+R()*.5})}
   // ---- main street south: a small cluster of carts on the west sidewalk ----
@@ -458,8 +462,12 @@ W.steam=[];W.vendors=[];
   [[-11,60.2],[11,63.8]].forEach(([x,z])=>{const pz=z<62?57.6:66.4;mb.cyl([x,0,pz],[x,5.6,pz],.1,.08,8,hex('#3a3a44'),m(MAT.metal));
     mb.box(x-.06,5.5,Math.min(z,pz),x+.06,5.62,Math.max(z,pz),hex('#3a3a44'),m(MAT.metal));W.signals.push({x,y:5.2,z,car:true})});
   // product 03: corner plaza (south-west corner of the crossing) with a lit plinth, ring light and floor graphic
-  W.products.push({id:2,key:'p3',pos:[-6.4,1.0,53.4],zone:'명동 교차로 · 남서쪽 코너'});
-  mb.box(-7.0,0,52.8,-5.8,.65,54.0,hex('#2a2833'),m(MAT.metal));mb.box(-7.03,.65,52.77,-5.77,.69,54.03,hex('#c5ff35'),m(MAT.emis,1.4));collide(-7.0,52.8,-5.8,54.0,'prod');
+  // [V11] EMERGENCY PATH devices in their deployed (open) state, installed in a line at regular intervals along the
+  //       pedestrian edge — the way the product site shows it ("not one, a connected system")
+  {const xs=-6.4,zs=[50.2,53.4,56.6];
+    W.products.push({id:2,key:'p3',pos:[xs,.0,53.4],zone:'명동 교차로 · 남서쪽 코너',nav:[xs+1.3,53.4],beaconH:1.35,ringR:1.25,reach:3.2,
+      models:zs.map((z,i)=>({part:'mDevice',p:[xs,0,z],ry:-Math.PI/2,s:1,main:i===1}))});
+    zs.forEach(z=>{collide(xs-.2,z-1.4,xs+.2,z+1.4,'prod')});}
   for(let i=0;i<24;i++){const a0=i/24*Math.PI*2,a1=(i+1)/24*Math.PI*2;dm.quad([-6.4+Math.cos(a0)*1.6,.008,53.4+Math.sin(a0)*1.6],[-6.4+Math.cos(a1)*1.6,.008,53.4+Math.sin(a1)*1.6],[-6.4+Math.cos(a1)*1.75,.008,53.4+Math.sin(a1)*1.75],[-6.4+Math.cos(a0)*1.75,.008,53.4+Math.sin(a0)*1.75],hex('#9d5cff'),m(MAT.emis,1.6))}
   mb.cyl([-8.3,0,51.6],[-8.3,4.2,51.6],.06,.05,8,hex('#2a2833'),m(MAT.metal));mb.cyl([-8.3,4.2,51.6],[-6.6,4.4,53.2],.035,.035,6,hex('#2a2833'),m(MAT.metal),false);
   mb.cyl([-6.4,4.3,53.4],[-6.4,4.4,53.4],.5,.5,24,hex('#c9b8ff'),m(MAT.emis,1.1));light([-6.4,3.2,53.4],'#b48cff',5,1.3,'prod');collide(-8.42,51.48,-8.18,51.72,'pole');
