@@ -74,7 +74,7 @@ export const QUALITY = (() => {
   return {
     mobile,
     dpr: Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.6),
-    people: mobile ? 46 : 110,
+    people: mobile ? 26 : 52,
     reflector: !mobile,
     bloom: true,
     shadows: !mobile,

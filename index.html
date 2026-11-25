@@ -731,7 +731,7 @@ let sy=scrollY;
 const ZONES=[
  {id:'street',no:'01',ko:'포장마차 거리',en:'STREET FOOD ZONE',gi:[3,11],
   desc:'퍼플 조명 아래 줄지어 선 포장마차. 오래된 명동의 밤 풍경에 AI가 더해져, 줄의 길이와 메뉴를 먼저 읽고 알려줍니다.',
-  prod:{name:'BRIDGE',line:'사람과 거리를 잇는 첫 번째 연결 제품'},href:'bridge/index.html',img:'bridge/assets/img/render-2.webp'},
+  prod:{name:'BRIDGE',line:'사람과 거리를 잇는 첫 번째 연결 제품'},href:'bridge/index.html?from=map',img:'bridge/assets/img/render-2.webp'},
  {id:'shopping',no:'02',ko:'쇼핑몰 거리',en:'SHOPPING ZONE',gi:[11,3],
   desc:'유리 파사드가 빛나는 쇼핑 거리. 걸음이 멈춘 쇼윈도 앞에서 도시가 취향을 읽고 다음 장면을 제안합니다.',
   prod:{name:'스마트 바구니 디스플레이',line:'바구니 입구에 걸어 쓰는 탈부착 안내 디스플레이'},href:'smart-basket/index.html',img:'smart-basket/images/IMG-01_hero.webp'},
@@ -898,7 +898,8 @@ const XC=carL(1)+.62*CAR.L; // the door the camera stops at
 const C_P='118,40,245',C_PH='157,92,255',C_L='197,255,53',C_W='245,245,246';
 function initMetro(){
   MT.ctx=MT.cv.getContext('2d');MT.tc=document.createElement('canvas');MT.tctx=MT.tc.getContext('2d');
-  const size=()=>{MT.dpr=Math.min(devicePixelRatio||1,1.75);MT.w=H.stick.clientWidth;MT.h=H.stick.clientHeight;MT.cv.width=Math.round(MT.w*MT.dpr);MT.cv.height=Math.round(MT.h*MT.dpr)};
+  const size=()=>{MT.lowq=matchMedia('(pointer: coarse)').matches||innerWidth<900;MT.dpr=Math.min(devicePixelRatio||1,MT.lowq?1:1.25);   /* [V15] was 1.75: the full-screen tunnel is the heaviest canvas, ~½ the pixels now */
+  MT.w=H.stick.clientWidth;MT.h=H.stick.clientHeight;MT.cv.width=Math.round(MT.w*MT.dpr);MT.cv.height=Math.round(MT.h*MT.dpr)};
   size();addEventListener('resize',size);
   let sd=424;const r=()=>{sd=(sd*16807)%2147483647;return(sd-1)/2147483646};
   /* [EDIT #1] neon light corridor behind the zero (replaces the repeated ring tube).
@@ -1195,7 +1196,7 @@ function drawTrainScene(c,t,time){
     const tg=c.createLinearGradient(X(carL(CAR.N-1)),0,X(0),0);tg.addColorStop(0,`rgba(${C_P},0)`);tg.addColorStop(1,`rgba(${C_PH},${.22*mb})`);
     c.fillStyle=tg;c.fillRect(X(carL(CAR.N-1))-W*.3*mb,Y(-.36),X(0)-X(carL(CAR.N-1))+W*.3*mb,Y(-.24)-Y(-.36));
     c.restore();
-    for(let i=4;i>=1;i--){c.globalAlpha=scene*.16*mb*(1-i/5);c.drawImage(tc,0,0,tc.width,tc.height,-dir*i*mb*Math.min(26,Math.abs(vx)*.5),0,W,Hh)}
+    for(let i=(MT.lowq?2:4);i>=1;i--){c.globalAlpha=scene*.16*mb*(1-i/5);c.drawImage(tc,0,0,tc.width,tc.height,-dir*i*mb*Math.min(26,Math.abs(vx)*.5),0,W,Hh)}
   }
   c.globalAlpha=scene;c.drawImage(tc,0,0,tc.width,tc.height,0,0,W,Hh);
 
@@ -2038,7 +2039,11 @@ function updateWorld(time){
   const idx=p<.17?0:p<.34?1:p<.51?2:3;
   F.tintT=tintAt(p);F.tintAmt=1-sm(.53,.66,p);
   F.glow=sm(.43,.47,p)*(1-sm(.52,.57,p));F.sweep=lerp(-2.6,2.6,sm(.44,.53,p));   // [EDIT #3] short light accent at full purple
-  if(idx!==W.act){W.act=idx;W.steps.forEach((s,i)=>{s.classList.toggle('on',i===idx);s.classList.toggle('past',i<idx)});W.rail.forEach((r,i)=>r.classList.toggle('on',i<=idx));W.lbl.textContent=LBL[idx]}
+  if(idx!==W.act){W.act=idx;W.rail.forEach((r,i)=>r.classList.toggle('on',i<=idx));W.lbl.textContent=LBL[idx]}
+  /* [V12] continuous cross-slide: every step eases in/out with the scroll and overlaps its neighbour (no timed class swap) */
+  {const B=[-1,.17,.34,.51],hw=.04;W.steps.forEach((s,i)=>{const a=i?sm(B[i]-hw,B[i]+hw,p):1,o=sm(B[i+1]-hw,B[i+1]+hw,p),v=a*(1-o);
+    s.style.opacity=v.toFixed(3);s.style.transform=`translateY(${((1-a)*34-o*34).toFixed(1)}px)`;s.style.filter=v>.995?'none':`blur(${((1-v)*10).toFixed(1)}px)`;
+    s.classList.toggle('on',v>.5);s.classList.toggle('past',o>.5)})}
   const portrait=VW/VH<1.05;
   F.spread=clamp(VW/VH/1.75,.42,1);
   if(portrait){F.pos=[[-.5,-.1],[0,1.2],[.5,-1.4]];F.R=.48;F.K=.42}
@@ -2332,7 +2337,8 @@ function drawExplorer(time){
 const rail=$$('#rail a'),menu=$$('.menu a'),nav=$('#nav'),pbar=$('#progress');
 function updateChrome(){
   nav.classList.toggle('solid',sy>L.hero.top+L.hero.h-VH*1.3);
-  const max=document.documentElement.scrollHeight-VH;pbar.style.transform=`scaleX(${clamp(sy/max)})`;
+  const _n=performance.now();if(_n-(updateChrome._t||-1e9)>500){updateChrome._h=document.documentElement.scrollHeight;updateChrome._t=_n}   // [V15] scrollHeight forces a layout: read it twice a second, not every frame
+  const max=updateChrome._h-VH;pbar.style.transform=`scaleX(${clamp(sy/max)})`;
   let cur='hero';const mid=sy+VH*.5;
   secs.forEach(id=>{if(mid>=L[id].top)cur=id});
   const key=cur==='outro'?'play-experience':cur;
@@ -2593,6 +2599,50 @@ metrics();layout();
  const afterFilm=f=>{const w=()=>window.__introFilmActive?setTimeout(w,1000):setTimeout(f,3000);w()};
  addEventListener('load',()=>afterFilm(()=>idle(()=>{['game.html','assets/game/city/engine.js','assets/game/city/world.js','assets/game/characters/chars.js','assets/game/city/people.js','assets/game/city/game.js']
    .forEach(h=>{const l=document.createElement('link');l.rel='prefetch';l.href=h;document.head.appendChild(l)})})),{once:true});
+})();
+</script>
+<style id="md-flow-style">
+/* [V12] scroll-linked section flow */
+.step{transition:none!important}
+.tx-veil{position:absolute;inset:0;z-index:9;pointer-events:none;opacity:0;visibility:hidden;
+  background:radial-gradient(90% 70% at 50% 100%,rgba(118,40,245,.30),rgba(118,40,245,0) 70%),linear-gradient(180deg,rgba(11,10,17,.35),var(--seam,#0b0a11));
+  -webkit-backdrop-filter:blur(calc(var(--b,0)*1px));backdrop-filter:blur(calc(var(--b,0)*1px))}
+.tx-rise{will-change:translate,opacity,scale}.stick{will-change:scale}
+</style>
+<script id="md-flow">
+/* [V12] md-flow — pure scroll functions (reversible). Needs no other script: it only reads scrollY and the DOM.
+   1) veil: the pinned scenes (INTRO · WORLD) dissolve into the shared seam colour as they leave and condense out of it as they arrive
+   2) rise: headings / cards of the flowing sections glide up and fade in one after another, so one slide hands over to the next */
+(function(){
+  const RMq=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sm=(a,b,v)=>{const t=Math.min(1,Math.max(0,(v-a)/(b-a)));return t*t*(3-2*t)};
+  const veils=['#intro','#world'].map(s=>{const sec=document.querySelector(s),st=sec&&sec.querySelector('.stick');if(!st)return null;
+    const v=document.createElement('div');v.className='tx-veil';v.setAttribute('aria-hidden','true');st.appendChild(v);return{sec,st,v,o:-1}}).filter(Boolean);
+  const R=[];
+  const add=(sel,root,stagger)=>document.querySelectorAll(root+' '+sel).forEach((el,i)=>{el.classList.add('tx-rise');R.push({el,d:stagger?i*.12:0,y:0,o:-1,bl:/head|heading/.test(el.className)})});
+  add('.pc-head','#products');add('.pc-stage','#products');add('.pc-hint','#products');
+  add('.ab-head','#about');add('.kcard','#about',1);add('.flow .fl','#about',1);add('.pal .sw','#about',1);
+  add('.xp-heading','#play-experience');add('.xp-stage','#play-experience');add('.xp-bottom','#play-experience');
+  add('.marq-t','.marq');
+  let busy=false;
+  function tick(){busy=false;const vh=innerHeight;
+    /* [V15] all layout reads first, then all style writes (no read/write interleaving → no forced re-layout) */
+    const vr=veils.map(t=>t.sec.getBoundingClientRect());
+    const rr=R.map(q=>q.el.getBoundingClientRect());
+    veils.forEach((t,i)=>{const r=vr[i];
+      const arrive=r.top>0?1-sm(0,.85,1-r.top/vh):0;
+      const leave=r.bottom<vh?sm(.08,.92,1-r.bottom/vh):0;
+      const o=Math.max(arrive*.9,leave*.96);
+      {const k=Math.max(leave,arrive),sc=1-.11*k;t.st.style.scale=k<.002?'none':sc.toFixed(4);t.st.style.transformOrigin=leave>arrive?'50% 100%':'50% 0%';t.st.style.borderRadius=(k*44).toFixed(1)+'px'}
+      if(Math.abs(o-t.o)>.004){t.o=o;t.v.style.opacity=o.toFixed(3);t.v.style.visibility=o>.01?'visible':'hidden';t.v.style.setProperty('--b',(o*16).toFixed(2))}});
+    R.forEach((q,i)=>{const r=rr[i];if(r.bottom<-80||r.top>vh+200)return;
+      const top=r.top-q.y;
+      const e=sm(0,1,(vh*1.0-top-q.d*vh*.35)/(vh*.55));
+      const y=(1-e)*130;
+      if(Math.abs(y-q.y)>.2||Math.abs(e-q.o)>.004){q.y=y;q.o=e;q.el.style.translate=e>.999?'none':'0 '+y.toFixed(1)+'px';q.el.style.scale=e>.999?'none':(.93+.07*e).toFixed(4);q.el.style.opacity=e>.999?'':e.toFixed(3);if(q.bl)q.el.style.filter=e>.999?'':'blur('+((1-e)*12).toFixed(1)+'px)'}});
+  }
+  const req=()=>{if(!busy){busy=true;requestAnimationFrame(tick)}};
+  addEventListener('scroll',req,{passive:true});addEventListener('resize',req);tick();
 })();
 </script>
 </body></html>

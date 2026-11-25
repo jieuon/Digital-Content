@@ -10,13 +10,13 @@ const {MB,M4,hex}=CE;const W=window.CW,P=window.CP;
 /* ---- [V11] product data — taken from each product's own website (bridge/, smart-basket/, crossroad-site/PRODUCT01/) ---- */
 const PRODUCTS=[
   {key:'p1',no:'01',name:'BRIDGE',sub:'Smart Communication Gate',place:'포장마차 거리 · 떡볶이 명가 카운터',
-   img:'bridge/assets/img/render-2.webp',href:'bridge/index.html',
+   img:'bridge/assets/img/render-2.webp',href:'bridge/index.html?from=game',
    problem:'상인과 관광객이 같은 언어를 쓰지 않아, 수량·맵기·옵션을 묻는 주문이 소통 오류로 끊어집니다.',
    solve:'카운터 위 게이트형 기기가 카메라·마이크로 두 사람의 말과 행동을 읽고, MCU AI가 두 언어를 중재해 양면 디스플레이와 스피커로 전합니다. 상단 조명(흰색·보라·라임)이 상태를 알려 주고, 마지막 결정은 사람이 합니다.'},
   {key:'p2',no:'02',name:'스마트 바구니 디스플레이',sub:'Smart Basket Display',place:'쇼핑몰 거리 · 올리브영 매장 안',
    img:'smart-basket/images/IMG-01_hero.webp',href:'smart-basket/index.html',
    problem:'말이 통하지 않는 외국인 방문객은 넓은 매장에서 원하는 코너를 찾거나 직원에게 도움을 청하기 어렵습니다.',
-   solve:'바구니 입구 테두리에 거는 가로형 디스플레이입니다. 다이얼로 코너를 고르면 화면이 아이콘과 화살표로 경로와 바구니 금액을 보여 주고, 주황색 호출 버튼을 누르면 가까운 직원에게 위치가 전달됩니다.'},
+   solve:'바구니 입구 테두리에 거는 가로형 디스플레이입니다. 다이얼로 코너를 고르면 화면이 아이콘과 화살표로 경로와 바구니 금액을 보여 주고, 라임색 호출 버튼을 누르면 가까운 직원에게 위치가 전달됩니다.'},
   {key:'p3',no:'03',name:'EMERGENCY PATH SYSTEM',sub:'Future Emergency Path',place:'명동 교차로 · 남서쪽 코너',
    img:'assets/products/emergency-path-card.webp',href:'product-crossroad.html',
    problem:'밀집된 인파와 좁은 골목, 복잡한 교차로에서는 긴급 차량이 진입해야 하는 순간 사람들로 인해 통행이 지연됩니다.',
@@ -74,25 +74,19 @@ part('mBasket',()=>{
   [[-.12,-.05,.05,.12,'#ff8fb1'],[-.02,.03,.04,.16,'#ffffff'],[.08,-.04,.05,.1,'#b6a4ff'],[.13,.06,.035,.14,'#7fd6c2']].forEach(([x,z,r,h,c])=>pm.box(x-r,.004,z-r*.7,x+r,h,z+r*.7,hex(c),PLN));
 });
 part('mBasketDisp',()=>{
-  // [V12] SMART BASKET DISPLAY (final design) 280 × 90 × 29 mm — hangs on the OUTSIDE of the basket's front wall.
-  // Local origin = centre of the top edge, +z = front (screen side), -z = basket side. Two hooks go over the rim; screen faces the customer.
-  const C_AMB=[.96,.44,.1];
-  pm.box(-.14,-.09,0,.14,0,.029,[.1,.1,.125],MET);                           // body
-  pm.box(-.14,-.016,0,.14,0,.029,[.2,.12,.42],MET);                          // violet top band
-  pm.box(-.09,-.078,.0291,.074,-.02,.0296,C_GLASS,EM(.2));                   // display
-  pm.box(-.083,-.058,.0297,-.064,-.038,.0299,C_WHITE,EM(1.4));               // cart icon
-  pm.box(-.058,-.056,.0297,-.004,-.036,.0299,C_WHITE,EM(1.6));               // price 48,000
-  pm.box(-.0005,-.075,.0297,.0005,-.023,.0299,C_WHITE,EM(1.2));              // divider
-  pm.box(.011,-.06,.0297,.035,-.036,.0299,C_WHITE,EM(1.4));                  // face / corner icon
-  pm.box(.045,-.049,.0297,.068,-.043,.0299,C_WHITE,EM(1.6));                 // arrow
-  pm.cyl([.107,-.045,.029],[.107,-.045,.046],.02,.019,18,[.16,.16,.2],MET);  // dial
-  pm.cyl([.107,-.045,.0461],[.107,-.045,.0472],.0172,.0172,18,C_PUR,EM(4));  // dial ring glow (violet)
-  pm.cyl([.107,-.045,.0473],[.107,-.045,.0478],.012,.012,14,[.12,.12,.15],MET);
-  pm.cyl([-.115,-.045,.029],[-.115,-.045,.0345],.011,.011,14,C_AMB,EM(2.2)); // call (bell) button — amber/orange
-  [-1,1].forEach(s=>{const x=s*.1;                                           // two hooks over the rim
-    pm.box(x-.017,0,-.034,x+.017,.012,.029,[.2,.12,.42],MET);                // bridge over the rim
-    pm.box(x-.017,-.05,-.034,x+.017,.012,-.026,[.06,.06,.08],MET)});         // inner leg
-  pm.cyl([0,-.05,0],[0,-.05,-.004],.007,.007,10,[.01,.01,.015],MET);         // recognition camera (rear face)
+  // SMART BASKET DISPLAY 280 × 90 × 61 mm — body, screen, dial with violet ring, lime call button, hook plate + camera
+  pm.box(-.14,-.014,-.045,.14,.014,.045,[.11,.11,.14],MET);
+  pm.box(-.09,.0141,-.03,.074,.0146,.03,C_GLASS,EM(.2));                     // display
+  pm.box(-.083,.0147,-.012,-.064,.0149,.012,C_WHITE,EM(1.4));               // cart icon
+  pm.box(-.058,.0147,-.008,-.004,.0149,.01,C_WHITE,EM(1.6));               // price 48,000
+  pm.box(.011,.0147,-.012,.035,.0149,.012,C_LIME,EM(1.4));                 // corner icon
+  pm.box(.045,.0147,-.004,.068,.0149,.004,C_WHITE,EM(1.6));                // arrow
+  pm.cyl([.107,.014,0],[.107,.03,0],.02,.019,18,[.16,.16,.2],MET);         // dial
+  pm.cyl([.107,.0305,0],[.107,.032,0],.0172,.0172,18,C_PUR,EM(4));         // dial ring glow
+  pm.cyl([.107,.0321,0],[.107,.0325,0],.012,.012,14,[.12,.12,.15],MET);
+  pm.cyl([-.115,.014,0],[-.115,.019,0],.011,.011,14,C_LIME,EM(2.2));       // call button
+  pm.box(-.05,-.034,-.045,.05,-.011,-.005,[.06,.06,.08],MET);               // centre hook plate (100 mm)
+  pm.box(-.01,-.033,-.029,.01,-.027,-.021,[.02,.02,.03],MET);               // recognition camera
 });
 part('mDevice',()=>{
   // EMERGENCY PATH device, OPEN state (2.79 m long, 0.36 m deep)
@@ -175,10 +169,15 @@ function bindUI(){
   G.lookSens=.0021;
   addEventListener('mousemove',e=>{if(G.state==='explore'&&G.locked&&!G.paused){G.cam.yaw-=e.movementX*G.lookSens;G.cam.pitch=clamp(G.cam.pitch-e.movementY*G.lookSens,-1.2,1.25)}});
   // click: open the product in front of you, otherwise (re)capture the mouse. Drag-look stays as a fallback when pointer lock is refused.
-  let drag=null;cv.addEventListener('pointerdown',e=>{if(G.state!=='explore'||G.paused||e.button!==0)return;
+  let drag=null,tl=null;   // [V15] tl = one-finger look/tap on touch screens
+  cv.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch'||G.state!=='explore'||G.paused||tl)return;tl={id:e.pointerId,x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,t:performance.now()};try{cv.setPointerCapture(e.pointerId)}catch(_){}});
+  cv.addEventListener('pointermove',e=>{if(!tl||e.pointerId!==tl.id)return;const dx=e.clientX-tl.x,dy=e.clientY-tl.y;tl.x=e.clientX;tl.y=e.clientY;if(G.state!=='explore'||G.paused)return;G.cam.yaw-=dx*.0058;G.cam.pitch=clamp(G.cam.pitch-dy*.0058,-1.2,1.25)});
+  const tEnd=e=>{if(!tl||e.pointerId!==tl.id)return;const tap=Math.hypot(e.clientX-tl.sx,e.clientY-tl.sy)<14&&performance.now()-tl.t<450;tl=null;if(tap&&e.type==='pointerup'&&G.state==='explore'&&G.target!=null)openPanel(G.target)};
+  cv.addEventListener('pointerup',tEnd);cv.addEventListener('pointercancel',tEnd);
+  cv.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')return;if(G.state!=='explore'||G.paused||e.button!==0)return;
     if(G.target!=null){openPanel(G.target);return}
     if(!G.locked){requestLock();drag={x:e.clientX,y:e.clientY};try{cv.setPointerCapture(e.pointerId)}catch(_){}}});
-  cv.addEventListener('pointermove',e=>{if(!drag||G.locked)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};
+  cv.addEventListener('pointermove',e=>{if(e.pointerType==='touch'||!drag||G.locked)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};
     G.cam.yaw-=dx*.004;G.cam.pitch=clamp(G.cam.pitch-dy*.004,-1.2,1.25)});
   cv.addEventListener('pointerup',()=>{drag=null});
   addEventListener('wheel',e=>{if(G.state==='explore'||G.state==='panel')e.preventDefault()},{passive:false});
@@ -187,6 +186,23 @@ function bindUI(){
   const sub=$('#ctySubway');if(sub)sub.addEventListener('click',()=>leave());
   document.querySelectorAll('#ctyNav [data-dest]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=+b.dataset.dest;NAV.select(NAV.dest===i?null:i)}));
   updCount();
+  bindTouch();
+}
+/* [V15] phone / tablet controls: left analog stick = walk · drag anywhere else = look · tap while a product is in the crosshair = info */
+function bindTouch(){
+  const touch=matchMedia('(pointer: coarse)').matches||(navigator.maxTouchPoints>0&&!matchMedia('(hover: hover)').matches);
+  if(!touch)return;G.touch=true;const root=document.documentElement;root.classList.add('touch-dev');
+  const j=document.createElement('div');j.id='ctyJoy';j.innerHTML='<i></i><b></b><span>이동</span>';document.body.appendChild(j);
+  const base=j.querySelector('i'),knob=j.querySelector('b');let pid=null,cx=0,cy=0;const R=48;
+  const set=(x,y)=>{let dx=x-cx,dy=y-cy;const d=Math.hypot(dx,dy);if(d>R){dx*=R/d;dy*=R/d}knob.style.transform='translate('+dx+'px,'+dy+'px)';G.joy=[dx/R,-dy/R]};
+  const end=()=>{pid=null;knob.style.transform='';G.joy=[0,0]};
+  j.addEventListener('pointerdown',e=>{if(pid!=null)return;e.preventDefault();e.stopPropagation();pid=e.pointerId;const r=base.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;try{j.setPointerCapture(pid)}catch(_){}set(e.clientX,e.clientY)});
+  j.addEventListener('pointermove',e=>{if(e.pointerId===pid){e.preventDefault();set(e.clientX,e.clientY)}});
+  j.addEventListener('pointerup',e=>{if(e.pointerId===pid)end()});j.addEventListener('pointercancel',e=>{if(e.pointerId===pid)end()});
+  const pr=$('#ctyPrompt');if(pr)pr.innerHTML='<kbd class="wide">TAP</kbd><span>제품 정보 보기</span>';
+  const ck=$('#ctyClick span');if(ck)ck.textContent='왼쪽 스틱 이동 · 화면 드래그로 둘러보기 · 제품 앞에서 탭';
+  const lh=$('#ctyLockHint');if(lh)lh.remove();
+  const tip=document.createElement('div');tip.id='ctyTouchTip';tip.textContent='왼쪽 스틱으로 이동 · 화면을 드래그해 둘러보기 · 제품이 가운데 오면 탭';document.body.appendChild(tip);setTimeout(()=>tip.classList.add('hide'),6500);
 }
 function enterExplore(){if(!G.ready)return;
   if(G.state==='ground'||G.state==='stairs'){G.state='explore';document.documentElement.classList.add('city-lock');G.hudT=performance.now()}
@@ -218,7 +234,7 @@ G.pause=function(){G.paused=true;G.keys={};G.vel=[0,0];try{if(document.pointerLo
    click (or E) near a product → small glass panel: image · name · place · problem · how it solves it · VIEW PRODUCT.
    While it is open, walking and mouse-look are paused; closing it resumes from the same spot and view. */
 G.spin={x:0,y:0};
-function openPanel(i){if(G.state!=='explore')return;const d=PRODUCTS[i];G.state='panel';G.insp=i;G.keys={};G.vel=[0,0];
+function openPanel(i){if(G.state!=='explore')return;const d=PRODUCTS[i];G.state='panel';G.insp=i;G.keys={};G.vel=[0,0];G.joy=[0,0];document.documentElement.classList.add('cty-panel-open');
   G.saved={pos:G.cam.pos.slice(),yaw:G.cam.yaw,pitch:G.cam.pitch};
   try{document.exitPointerLock()}catch(e){}
   const im=$('#ctyImg');if(im){im.src=d.img;im.alt=d.name+' 제품 렌더링'}
@@ -228,7 +244,7 @@ function openPanel(i){if(G.state!=='explore')return;const d=PRODUCTS[i];G.state=
   $('#ctyPanel').classList.add('show');$('#ctyPrompt').classList.remove('show');const h=$('#ctyLockHint');if(h)h.classList.remove('show');
   if(!G.found.has(d.key)){G.found.add(d.key);try{localStorage.setItem('md2030_found',JSON.stringify([...G.found]))}catch(e){}updCount(true)}
   setTimeout(()=>{const c=$('#ctyPanelClose');if(c)try{c.focus({preventScroll:true})}catch(_){}},60)}
-function closePanel(){if(G.state!=='panel')return;$('#ctyPanel').classList.remove('show');G.state='explore';G.keys={};G.vel=[0,0];
+function closePanel(){if(G.state!=='panel')return;document.documentElement.classList.remove('cty-panel-open');$('#ctyPanel').classList.remove('show');G.state='explore';G.keys={};G.vel=[0,0];
   const S=G.saved;if(S){G.cam.pos=S.pos.slice();G.cam.yaw=S.yaw;G.cam.pitch=S.pitch}
   requestLock()}   // the close click is a user gesture → mouse control comes back immediately
 function updCount(bump){const n=G.found.size;const el=$('#ctyCount');if(!el)return;el.textContent=String(n).padStart(2,'0');
@@ -268,8 +284,9 @@ G.frame=function(time,p,visible){
   if(G.state==='explore'){
     // [V11] walk 2.15 → 3.12 m/s (×1.45), run 4.3 → 6.24 m/s; diagonal input normalised; frame-rate independent (dt)
     const k=G.keys,run=G.paused?0:(k.shift?G.SPEED*2:G.SPEED);let fx=(k.w||k.arrowup?1:0)-(k.s||k.arrowdown?1:0),sx=(k.d||k.arrowright?1:0)-(k.a||k.arrowleft?1:0);
-    const l=Math.hypot(fx,sx)||1;fx/=l;sx/=l;const yw=c.yaw,F=[-Math.sin(yw),-Math.cos(yw)],Rt=[Math.cos(yw),-Math.sin(yw)];
-    const tv=[(F[0]*fx+Rt[0]*sx)*run,(F[1]*fx+Rt[1]*sx)*run];const a=1-Math.exp(-dt*(fx||sx?9:20));   // quick start, very short stop
+    {const J=G.joy;if(J&&(J[0]||J[1])){fx+=J[1];sx+=J[0]}}   // [V15] touch joystick (analog)
+    const l0=Math.hypot(fx,sx),mag=Math.min(1,l0),l=l0||1;fx/=l;sx/=l;const yw=c.yaw,F=[-Math.sin(yw),-Math.cos(yw)],Rt=[Math.cos(yw),-Math.sin(yw)];
+    const tv=[(F[0]*fx+Rt[0]*sx)*run*mag,(F[1]*fx+Rt[1]*sx)*run*mag];const a=1-Math.exp(-dt*(fx||sx?9:20));   // quick start, very short stop
     G.vel=[lerp(G.vel[0],tv[0],a),lerp(G.vel[1],tv[1],a)];if(!fx&&!sx&&Math.hypot(G.vel[0],G.vel[1])<.05)G.vel=[0,0];
     // collision in sub-steps (≤ 0.12 m) so the faster walk can never tunnel through thin walls / rails
     let nx=c.pos[0],nz=c.pos[2];{const mx=G.vel[0]*dt,mz=G.vel[1]*dt,n=Math.max(1,Math.ceil(Math.hypot(mx,mz)/.12));for(let q=0;q<n;q++){nx+=mx/n;nz+=mz/n;[nx,nz]=collide(nx,nz,.32)}}

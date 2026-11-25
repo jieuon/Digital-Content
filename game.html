@@ -6,7 +6,20 @@
 html{scroll-behavior:auto!important}
 body{background:#050408}
 #nav{opacity:.95}
-</style></head><body>
+</style><style id="v15-touch">
+/* [V15] touch controls */
+#ctyJoy,#ctyTouchTip{display:none}
+.touch-dev.city-lock #ctyJoy{display:block;position:fixed;left:max(22px,env(safe-area-inset-left,0px));bottom:max(26px,env(safe-area-inset-bottom,0px));width:132px;height:132px;z-index:120;touch-action:none;-webkit-user-select:none;user-select:none}
+.touch-dev.city-lock.cty-panel-open #ctyJoy{display:none}
+#ctyJoy i{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(197,255,53,.55);background:radial-gradient(circle,rgba(118,40,245,.28),rgba(10,9,16,.45));box-shadow:0 0 28px rgba(118,40,245,.35)}
+#ctyJoy b{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(197,255,53,.85);box-shadow:0 0 22px rgba(197,255,53,.55);will-change:transform}
+#ctyJoy span{position:absolute;left:0;right:0;top:-20px;text-align:center;font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:.2em;color:rgba(245,245,246,.7)}
+.touch-dev.city-lock #ctyTouchTip{display:block;position:fixed;left:50%;bottom:max(300px,calc(env(safe-area-inset-bottom,0px) + 300px));transform:translateX(-50%);z-index:120;max-width:88vw;text-align:center;font:500 12px/1.5 Pretendard,'Noto Sans KR',sans-serif;color:#fff;background:rgba(10,9,16,.72);border:1px solid rgba(245,245,246,.2);border-radius:14px;padding:9px 14px;pointer-events:none;transition:opacity .6s}
+.touch-dev #ctyTouchTip.hide{opacity:0}
+.touch-dev .cty-keys,.touch-dev #ctyLockHint{display:none!important}
+.touch-dev.city-lock .cty-nav{right:10px;bottom:max(14px,env(safe-area-inset-bottom,0px))}
+</style>
+</head><body>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

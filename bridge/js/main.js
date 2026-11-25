@@ -24,31 +24,44 @@
      scenes — the 3D model is ONLY on screen in the viewer (a3b) and the
      simulator (a4). Everywhere else the GL layer is background only.
   ------------------------------------------------------------------ */
-  const D = { eye: [0, 0, 6], tg: [0, 0, 0], fov: 32, vis: 0, ledT: W, ledB: [.6, .6, .64], studio: 0, purple: .6, lime: .2, dark: 0, hband: 0, floor: 0, rib: 0, part: 0, strk: 0, warp: 0, flash: 0, fade: 0, fit: 0, spin: 0, doorA: 0, doorZ: 1, solid: 0, halo: 0, rim: 0, beam: 0, wave: 0, px: 0 };
+  const D = { eye: [0, 0, 6], tg: [0, 0, 0], fov: 32, vis: 0, ledT: W, ledB: [.6, .6, .64], studio: 0, purple: .6, lime: .2, dark: 0, hband: 0, floor: 0, rib: 0, part: 0, strk: 0, warp: 0, flash: 0, fade: 0, fit: 0, spin: 0, doorA: 0, doorZ: 1, solid: 0, halo: 0, rim: 0, beam: 0, wave: 0, px: 0, gate: 0, gateA: 0, arc: 0, pA: 0, pX: 0, pY: 0, pW: .07, pF: 0, pH: 0, pI: 0, pS: 0, pB: 0, pHd: 3, tun: 0, tz: 0, hz: 0, mcu: 0, mcuK: 0 };
   const O = (az, el, d, ty, tx) => { ty = ty || 0; tx = tx || 0; const a = az * Math.PI / 180, e = el * Math.PI / 180; return { eye: [tx + d * Math.sin(a) * Math.cos(e), ty + d * Math.sin(e), d * Math.cos(a) * Math.cos(e)], tg: [tx, ty, 0] }; };
   const STUDIO = { vis: 1, studio: 1, hband: 0, ledT: W, purple: 0, dark: 0, floor: 1, fit: 1, solid: .96, halo: .4, rim: .5, beam: 1 };
   const R0 = { eye: [0, 0, 2.4], tg: [0, 0, -5] };
   const SC = {
-    a1: [[0, { ...R0, part: .35, purple: .7 }],
-      [.28, { ...R0, part: .5, purple: .8, doorA: .6, doorZ: 1 }],
-      [.4, { ...R0, doorA: 1, doorZ: 1.4, part: .7, strk: .3, purple: .85 }],
-      [.56, { ...R0, doorA: 1, doorZ: 3, part: 1, strk: .8, warp: .35, purple: .9 }],
-      [.66, { ...R0, doorA: 1, doorZ: 26, part: 1, strk: 1, warp: .95, flash: .5, rib: .5, purple: .9 }],
-      [.74, { ...R0, doorA: 0, doorZ: 40, rib: .8, part: 1, strk: 1, warp: .6, lime: .3, purple: 1 }],
-      [.9, { ...R0, rib: .75, part: .8, strk: .5, warp: .2, lime: .35, purple: 1 }],
-      [1, { ...R0, rib: .65, part: .6, strk: .3, warp: .1, lime: .35, purple: 1 }]],
-    a2: [[0, { solid: .92, halo: .55, part: .16, px: 1 }], [1, { solid: .92, halo: .55, part: .16, px: 1 }]],
-    a2b: [[0, { purple: .5, dark: .35, part: .5, rib: .3, ...R0 }], [.22, { purple: .36, dark: .4, part: .3, rib: .15, ...R0 }], [1, { purple: .36, dark: .4, part: .3, rib: .15, ...R0 }]],
-    a3b: [[0, { ...O(24, 5, 3.5, -.03, -.1), ...STUDIO }], [.12, { ...O(0, 2, 3.6, -.03, -.1), ...STUDIO }], [1, { ...O(0, 2, 3.6, -.03, -.1), ...STUDIO }]],
-    a4: [[0, { ...O(0, 2, 4.3, -.03), ...STUDIO, hband: 0 }], [.12, { ...O(0, 5, 4.5, -.08, .0), ...STUDIO, hband: 0 }], [1, { ...O(0, 5, 4.5, -.08, .0), ...STUDIO, hband: 0 }]],
+    a1: [[0, { ...R0, gate: 0, gateA: 1, arc: .55, part: .16, purple: .16 }],
+      [.14, { ...R0, gate: .1, gateA: 1, arc: .5, part: .2, purple: .2 }],
+      [.28, { ...R0, gate: 1, gateA: 1, arc: .35, doorA: .6, doorZ: 1, part: .3, purple: .3 }],
+      [.4, { ...R0, gate: 1, gateA: 0, arc: 0, doorA: 1, doorZ: 1.4, part: .5, strk: .2, purple: .3 }],
+      [.5, { ...R0, doorA: 1, doorZ: 2.4, part: .6, strk: .35, warp: .12, purple: .22, tun: 0, tz: 0 }],
+      [.58, { ...R0, doorA: .6, doorZ: 5, part: .6, strk: .45, warp: .25, purple: .22, tun: .65, tz: 2.5 }],
+      [.67, { ...R0, doorA: 0, doorZ: 12, part: .5, strk: .5, warp: .22, flash: .25, purple: .22, tun: 1, tz: 10 }],
+      [.74, { ...R0, doorA: 0, part: .4, strk: .4, warp: .15, flash: .45, purple: .2, tun: .85, tz: 17, hz: .5, pI: .3, pS: 1, pF: 1, pX: -1.05, pY: -.08, pA: .04, pW: .09, pH: .3, pHd: 1.05 }],
+      [.82, { ...R0, part: .3, dark: .3, strk: .15, warp: .1, lime: .1, purple: .18, tun: .2, tz: 21, hz: .9, pI: .75, pS: 1, pF: 1, pX: -1.05, pY: -.08, pA: .04, pW: .09, pH: .3, pHd: 1.05 }],
+      [.92, { ...R0, arc: .1, dark: .3, part: .2, strk: .05, warp: 0, lime: .1, purple: .16, tun: 0, tz: 23, hz: 1, pI: .9, pS: 1, pF: 1, pX: -1.05, pY: -.08, pA: .04, pW: .09, pH: .3, pHd: 1.05 }],
+      [1, { ...R0, arc: .1, dark: .3, part: .2, strk: .05, warp: 0, lime: .1, purple: .16, tun: 0, tz: 24, hz: 1, pI: .9, pS: 1, pF: 1, pX: -1.05, pY: -.08, pA: .04, pW: .09, pH: .3, pHd: 1.05 }]],
+    a2: [[0, { solid: .92, halo: .55, part: .12, px: 1 }], [1, { solid: .92, halo: .55, part: .12, px: 1 }]],
+    // PROBLEM: the light is the timeline — one beam sweeps across the title, then bends through fluted glass (01), splits and misses itself (02), breaks up (03) and finally meets itself (insight)
+    a2b: [[0, { ...R0, dark: .42, purple: .1, part: .06, pA: .16, pX: -1, pY: -.22, pW: .07, pF: 0, pH: .15, pI: .95, pHd: .1 }],
+      [.06, { ...R0, dark: .42, purple: .1, part: .06, pA: .16, pX: -1, pY: -.22, pW: .07, pF: 0, pH: .15, pI: .95, pHd: 1.2 }],
+      [.15, { ...R0, dark: .42, purple: .12, part: .06, pA: .14, pX: -1, pY: -.2, pW: .075, pF: 0, pH: .3, pI: .9, pHd: 3 }],
+      [.23, { ...R0, dark: .42, purple: .12, part: .05, pA: .12, pX: -1, pY: -.2, pW: .075, pF: 0, pH: .5, pI: .4, pHd: 1.4 }],
+      [.33, { ...R0, dark: .4, purple: .12, part: .05, pA: -2.6, pX: .95, pY: .55, pW: .085, pF: 1, pH: .55, pI: .85, pHd: 1.5 }],
+      [.53, { ...R0, dark: .4, purple: .12, part: .05, pA: -2.75, pX: .95, pY: .3, pW: .08, pF: .3, pH: .75, pI: .8, pS: .8, pHd: 1.4 }],
+      [.7, { ...R0, dark: .4, purple: .14, part: .05, pA: -2.9, pX: .95, pY: .12, pW: .095, pF: 0, pH: 1, pI: 1.25, pS: .9, pB: .85, pHd: 1.8 }],
+      [.9, { ...R0, dark: .4, purple: .14, part: .05, pA: 0, pX: -1, pY: 0, pW: .08, pF: 0, pH: .3, pI: 1.1, pS: 0, pB: 0, pHd: 3 }],
+      [1, { ...R0, dark: .4, purple: .14, part: .05, pA: 0, pX: -1, pY: 0, pW: .08, pF: 0, pH: .3, pI: 1, pS: 0, pB: 0, pHd: 3 }]],
+    a3b: [[0, { ...O(24, 5, 3.5, -.03, -.1), ...STUDIO, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }], [.12, { ...O(0, 2, 3.6, -.03, -.1), ...STUDIO, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }], [1, { ...O(0, 2, 3.6, -.03, -.1), ...STUDIO, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }]],
+    a4: [[0, { ...O(0, 2, 4.3, -.03), ...STUDIO, hband: 0, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }], [.12, { ...O(0, 5, 4.5, -.08, .0), ...STUDIO, hband: 0, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }], [1, { ...O(0, 5, 4.5, -.08, .0), ...STUDIO, hband: 0, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }]],
     a5: [[0, { solid: 1, halo: .35, part: .1, px: 1 }], [1, { solid: 1, halo: .35, part: .1, px: 1 }]],
-    a6: [[0, { ...R0, rib: .4, part: .45, strk: .15, purple: .55, wave: .9 }], [.1, { ...R0, rib: .22, part: .3, strk: .08, purple: .32, wave: 1 }], [1, { ...R0, rib: .2, part: .25, strk: .08, purple: .3, wave: 1 }]],
-    a6b: [[0, { ...R0, solid: 1, halo: .3, part: .1, px: 1 }], [1, { ...R0, solid: 1, halo: .3, part: .1, px: 1 }]],
-    a7: [[0, { ...R0, rib: .25, part: .4, lime: .55, purple: .6 }],
-      [.08, { ...R0, doorA: 1, doorZ: 22, rib: .4, part: .8, strk: .7, warp: .6, flash: 0, lime: .6, purple: .6 }],
-      [.32, { ...R0, doorA: 1, doorZ: 1.3, rib: .4, part: .7, strk: .4, warp: .3, lime: .6, purple: .8 }],
-      [.47, { ...R0, doorA: 0, doorZ: 1, rib: .3, part: .4, lime: .6, purple: .6 }],
-      [1, { ...R0, rib: .25, part: .35, lime: .6, purple: .6 }]]
+    // ACT06: a quiet, dark stage — one soft core of light behind the MCU, no ribbons, no particles, no decorative trails
+    a6: [[0, { ...R0, solid: .55, halo: .9, purple: .1 }], [1, { ...R0, solid: .55, halo: .9, purple: .1 }]],
+    a6b: [[0, { ...R0, solid: 1, halo: .3, part: .06, px: 1, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }], [1, { ...R0, solid: 1, halo: .3, part: .06, px: 1, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }]],
+    a7: [[0, { ...R0, arc: .3, part: .18, purple: .2 }],
+      [.08, { ...R0, doorA: 1, doorZ: 22, part: .5, strk: .6, warp: .6, flash: 0, purple: .45 }],
+      [.32, { ...R0, doorA: 1, doorZ: 1.3, part: .45, strk: .35, warp: .3, lime: .12, purple: .6 }],
+      [.47, { ...R0, doorA: 0, doorZ: 1, part: .2, lime: 0, purple: .3 }],
+      [1, { ...R0, arc: .25, part: .15, purple: .25 }]]
   };
   Object.keys(SC).forEach(k => SC[k] = SC[k].map(([p, o]) => [p, { ...D, ...o }]));
   function mixV(a, b, t) { return Array.isArray(a) ? a.map((v, i) => lerp(v, b[i], t)) : lerp(a, b, t); }
@@ -121,7 +134,7 @@
   let secs = [];
   const win = e => { const r = e.dataset.r.split(',').map(Number); return { a: r[0], b: r[1] }; };
   function measure(noFit) {
-    vw = innerWidth; vh = innerHeight; if (noFit !== true) fitAll();
+    vw = innerWidth; vh = innerHeight; $$('#act2b .stage,#act3').forEach(e => { e.style.translate = ''; }); if (noFit !== true) fitAll();
     secs = $$('.act').map(el => {
       const top = el.getBoundingClientRect().top + scrollY, h = el.offsetHeight;
       return {
@@ -289,7 +302,7 @@
   ------------------------------------------------------------------ */
   const shardWords = ['???', '…', 'HOW', '몇 개?', 'NO', '맵게?', 'WHAT', '…?', 'SPICY', '네?', 'HUH', '—', 'OK?', '어…'];
   const shards = $('#shards');
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < 0; i++) {
     const s = document.createElement('div'); s.className = 'shard'; const w = 50 + hs(i, 1) * 140, h = 30 + hs(i, 2) * 90;
     s.style.cssText = 'width:' + w + 'px;height:' + h + 'px;left:' + (hs(i, 3) * 100) + '%;top:' + (hs(i, 4) * 100) + '%;clip-path:polygon(' + [0, 1, 2].map(k => (hs(i, 5 + k) * 100).toFixed(0) + '% ' + (hs(i, 9 + k) * 100).toFixed(0) + '%').join(',') + (hs(i, 20) > .5 ? ',' + (hs(i, 21) * 100).toFixed(0) + '% 100%' : '') + ')';
     s.textContent = shardWords[i % shardWords.length]; s._k = i; shards.appendChild(s);
@@ -319,23 +332,51 @@
      ACT06 system map: nodes assemble, lines draw, packets travel
   ------------------------------------------------------------------ */
   const NS = 'http://www.w3.org/2000/svg';
-  const sysEl = $('#sysmap'), sysSvg = $('#sysLines'), mcuEl = $('#mcu'), sysIn = $$('.sys-col.in .nd'), sysOut = $$('.sys-col.out .nd'), sysPaths = [];
-  [...sysIn, ...sysOut].forEach((n, i) => { const pa = document.createElementNS(NS, 'path'); if (i >= sysIn.length) pa.setAttribute('class', 'o'); const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', 4); sysSvg.appendChild(pa); sysSvg.appendChild(c); sysPaths.push({ pa, c, n, out: i >= sysIn.length, k: i >= sysIn.length ? i - sysIn.length : i, cnt: i >= sysIn.length ? sysOut.length : sysIn.length }); });
-  const SYSCAP = [['01 · INPUT', '사람의 행동이 들어오는 곳', '버튼, 카메라, 마이크, 그리고 두 사람의 목소리.'], ['02 · MCU AI', 'AI는 돕고, 결정은 사람이', '상황을 읽고, 두 언어를 중재하고, 마지막 결정은 사람에게 남깁니다.'], ['03 · RESPONSE', '알맞은 방식으로 돌려주는 곳', '디스플레이, 스피커, 상단 상태 라인으로 양쪽 모두에게.']];
+  const sysEl = $('#sysmap'), sysSvg = $('#sysLines'), ringEl = $('#ring'), sysIn = $$('.s6-col.in .nd'), sysOut = $$('.s6-col.out .nd'), prinEl = $$('#prin li'), sysPaths = [];
+  [...sysIn, ...sysOut].forEach((n, i) => { const pa = document.createElementNS(NS, 'path'); if (i >= sysIn.length) pa.setAttribute('class', 'o'); const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', 3.2); sysSvg.appendChild(pa); sysSvg.appendChild(c); sysPaths.push({ pa, c, n, out: i >= sysIn.length, k: i >= sysIn.length ? i - sysIn.length : i, cnt: i >= sysIn.length ? sysOut.length : sysIn.length }); });
   let sysPh = -1;
+  // INPUT -> MCU AI -> RESPONSE on ONE screen: the three zones light up in sequence and the trails follow the real connection paths
+  const mcuS = { a: 0, x: .5, y: .5, r: .3, k: 0 };
+  const PRIN = [['상황 인식', 'SITUATION AWARENESS'], ['실시간 연결', 'REAL-TIME CONNECTION'], ['상황 대응', 'ADAPTIVE RESPONSE'], ['의도 보조', 'INTENT ASSIST'], ['인간 통제', 'HUMAN CONTROL']];
+  let prinI = -2;
+  function mcuUpdate(p) {
+    const rr = ringEl.getBoundingClientRect(), ea = sm(clamp((p - .02) / .2));
+    mcuS.a = ea * (1 - sm(clamp((p - .97) / .03)));
+    const offIn = sm(clamp((p - .1) / .08)) * (1 - sm(clamp((p - .34) / .08))), offOut = sm(clamp((p - .62) / .08)) * (1 - sm(clamp((p - .88) / .06)));
+    const core = sm(clamp((p - .34) / .08)) * (1 - sm(clamp((p - .62) / .08)));
+    mcuS.x = (rr.left + rr.width / 2) / vw + (offOut - offIn) * .03; mcuS.y = 1 - (rr.top + rr.height / 2) / vh;
+    mcuS.r = rr.width * .5 / vh * (.55 + .45 * ea) * (1 + .07 * core + .04 * (offIn + offOut) + .02 * Math.sin(T * 1.6));
+    mcuS.k = p * 3.2 + core * Math.sin(T * 1.2) * .15;
+    mcuS.h = sm(clamp((p - .3) / .1)) * .5 + sm(clamp((p - .6) / .1)) * .5;
+    const st = p < .36 ? -1 : Math.min(4, Math.floor((p - .36) / .056)), one = $('#s6one');
+    if (st !== prinI) { prinI = st; one.style.opacity = 0; setTimeout(() => { if (prinI < 0) return; one.querySelector('b').textContent = PRIN[prinI][0]; one.querySelector('em').textContent = PRIN[prinI][1]; one.style.opacity = 1; }, st < 0 ? 0 : 160); }
+    $$('#ring .pn').forEach((pn, i) => { pn.classList.toggle('on', st >= i); pn.classList.toggle('lime', i === 4 && st === 4); });
+    const ci = p < .12 || p >= .36 ? -1 : Math.min(2, Math.floor((p - .12) / .08)), co = p < .64 || p >= .88 ? -1 : Math.min(2, Math.floor((p - .64) / .08));
+    sysIn.forEach((n, i) => n.classList.toggle('nd-on', i === ci)); sysOut.forEach((n, i) => n.classList.toggle('nd-on', i === co));
+    sysPaths.forEach(sp => sp.pa.classList.toggle('hot', sp.n.classList.contains('nd-on')));
+  }
   function layoutSys(p) {
-    const ph = p < .34 ? 0 : (p < .62 ? 1 : 2);
-    if (ph !== sysPh) { sysPh = ph; $('#sysK').textContent = SYSCAP[ph][0]; $('#sysT').textContent = SYSCAP[ph][1]; $('#sysD').textContent = SYSCAP[ph][2]; }
-    const W = sysEl.offsetWidth, vert = W < 700, mx = mcuEl.offsetLeft, my = mcuEl.offsetTop, mw = mcuEl.offsetWidth, mh = mcuEl.offsetHeight;
+    mcuUpdate(p);
+    const ph = p < .34 ? 0 : (p < .64 ? 1 : (p < .86 ? 2 : 3));
+    if (ph !== sysPh) { sysPh = ph; sysEl.dataset.ph = ph; $('#s6foot').classList.toggle('live', ph === 3); }
+    const pns = $$('#ring .pn');
+    prinEl.forEach((li, i) => { if (pns[i]) { pns[i].classList.toggle('on', p >= .38 + .05 * i); pns[i].classList.toggle('lime', i === 4 && p >= .86); } const on = p >= .38 + .05 * i; li.classList.toggle('on', on); li.classList.toggle('cur', on && p < .38 + .05 * (i + 1) && ph === 1); li.classList.toggle('lime', i === 4 && p >= .86); });
+    if (!RM) { const tx = mouse.sx * 8, ty = mouse.sy * 6; ringEl.style.transform = 'perspective(600px) rotateY(' + tx.toFixed(1) + 'deg) rotateX(' + (-ty).toFixed(1) + 'deg)'; }
+    const W = sysEl.offsetWidth, vert = W < 720, coreEl = $('#mcu'), rx = coreEl.offsetLeft + ringEl.offsetLeft, ry = coreEl.offsetTop + ringEl.offsetTop, rw = ringEl.offsetWidth, rh = ringEl.offsetHeight, cx = rx + rw / 2, cy = ry + rh / 2, R = rw * .44;
     sysPaths.forEach((sp, i) => {
-      const n = sp.n, nl = n.offsetLeft, nt = n.offsetTop, nw = n.offsetWidth, nh = n.offsetHeight, f = (sp.k + 1) / (sp.cnt + 1);
+      const n = sp.n, nl = n.offsetLeft, nt = n.offsetTop, nw = n.offsetWidth, nh = n.offsetHeight, f = (sp.k + 1) / (sp.cnt + 1), a = (f - .5) * 1.3;
       let d;
-      if (!vert) { const sx = sp.out ? mx + mw : nl + nw, sy = sp.out ? my + mh * f : nt + nh / 2, ex = sp.out ? nl : mx, ey = sp.out ? nt + nh / 2 : my + mh * f, dx = (ex - sx) * .5; d = 'M' + sx + ',' + sy + ' C' + (sx + dx) + ',' + sy + ' ' + (ex - dx) + ',' + ey + ' ' + ex + ',' + ey; }
-      else { const sx = sp.out ? mx + mw * f : nl + nw / 2, sy = sp.out ? my + mh : nt + nh, ex = sp.out ? nl + nw / 2 : mx + mw * f, ey = sp.out ? nt : my, dy = (ey - sy) * .5; d = 'M' + sx + ',' + sy + ' C' + sx + ',' + (sy + dy) + ' ' + ex + ',' + (ey - dy) + ' ' + ex + ',' + ey; }
+      if (!vert) {
+        const sx = sp.out ? cx + Math.cos(a) * R : nl + nw + 6, sy = sp.out ? cy + Math.sin(a) * R : nt + nh / 2, ex = sp.out ? nl - 6 : cx - Math.cos(a) * R, ey = sp.out ? nt + nh / 2 : cy + Math.sin(a) * R, dx = (ex - sx) * .55;
+        d = 'M' + sx.toFixed(1) + ',' + sy.toFixed(1) + ' C' + (sx + dx).toFixed(1) + ',' + sy.toFixed(1) + ' ' + (ex - dx).toFixed(1) + ',' + ey.toFixed(1) + ' ' + ex.toFixed(1) + ',' + ey.toFixed(1);
+      } else {
+        const sx = sp.out ? cx + Math.sin(a) * R : nl + nw / 2, sy = sp.out ? cy + Math.cos(a) * R : nt + nh + 4, ex = sp.out ? nl + nw / 2 : cx + Math.sin(a) * R, ey = sp.out ? nt - 4 : cy - Math.cos(a) * R, dy = (ey - sy) * .5;
+        d = 'M' + sx.toFixed(1) + ',' + sy.toFixed(1) + ' C' + sx.toFixed(1) + ',' + (sy + dy).toFixed(1) + ' ' + ex.toFixed(1) + ',' + (ey - dy).toFixed(1) + ' ' + ex.toFixed(1) + ',' + ey.toFixed(1);
+      }
       sp.pa.setAttribute('d', d);
-      const len = sp.pa.getTotalLength(), t0 = sp.out ? .62 : .27, prog = clamp((p - (t0 + .012 * sp.k)) / .05);
+      const len = sp.pa.getTotalLength(), t0 = sp.out ? .66 : .1, prog = clamp((p - (t0 + .06 * sp.k)) / .1);
       sp.pa.style.strokeDasharray = len; sp.pa.style.strokeDashoffset = (len * (1 - prog)).toFixed(1);
-      if (prog >= 1 && !RM) { const pt = sp.pa.getPointAtLength(((T * .28 + i * .19) % 1) * len); sp.c.setAttribute('cx', pt.x); sp.c.setAttribute('cy', pt.y); sp.c.style.display = ''; } else sp.c.style.display = 'none';
+      if (prog >= 1 && !RM) { const pt = sp.pa.getPointAtLength(((T * .22 + i * .17) % 1) * len); sp.c.setAttribute('cx', pt.x); sp.c.setAttribute('cy', pt.y); sp.c.style.display = ''; } else sp.c.style.display = 'none';
     });
   }
   $$('.acc-h').forEach(b => b.addEventListener('click', () => {
@@ -359,6 +400,14 @@
       const r = el.getBoundingClientRect(); if (r.bottom < 0 || r.top > vh) return;
       trail.forEach((t, i) => { el.style.setProperty('--x' + (i + 1), (t.x - r.left).toFixed(0) + 'px'); el.style.setProperty('--y' + (i + 1), (t.y - r.top).toFixed(0) + 'px'); el.style.setProperty('--r' + (i + 1), (R * rs[i]).toFixed(0) + 'px'); });
     });
+    // brand titles (intro + outro share one system): the reflection on the letters follows the cursor, a faint afterimage trails the motion and settles when it stops
+    magGroups.forEach(g => {
+      if (!g.el.classList.contains('brand-t')) return;
+      const r0 = g.el.getBoundingClientRect(); if (r0.bottom < 0 || r0.top > vh) return;
+      g._vx = lerp(g._vx || 0, clamp((trail[0].x - trail[2].x) * .5, -14, 14), 1 - Math.exp(-dt * 6)); g._vy = lerp(g._vy || 0, clamp((trail[0].y - trail[2].y) * .5, -10, 10), 1 - Math.exp(-dt * 6));
+      g.el.style.setProperty('--vx', g._vx.toFixed(1)); g.el.style.setProperty('--vy', g._vy.toFixed(1));
+      g.l.forEach(l => { const lr = l.getBoundingClientRect(); l.style.setProperty('--hx', (trail[1].x - lr.left).toFixed(0) + 'px'); l.style.setProperty('--hy', (trail[1].y - lr.top).toFixed(0) + 'px'); });
+    });
     if (!fine && !(now - lastMove < 1200)) return;
     const mx = mouse.px, my = mouse.py, MR = Math.min(190, vw * .16), kk = 1 - Math.exp(-dt * 12);
     magGroups.forEach(g => {
@@ -370,8 +419,9 @@
       g.l.forEach(l => {
         const lr = l.getBoundingClientRect(), cx = lr.left + lr.width / 2 - (l._ox || 0), cy = lr.top + lr.height / 2 - (l._oy || 0), dx = mx - cx, dy = my - cy, d = Math.hypot(dx, dy) || 1, k = near ? Math.pow(clamp(1 - d / MR), 2) : 0;
         l._ox = lerp(l._ox || 0, dx / d * k * 14, kk); l._oy = lerp(l._oy || 0, dy / d * k * 10, kk); l._or = lerp(l._or || 0, clamp(dx / MR, -1, 1) * k * 12, kk);
-        const lit = near && d < MR * 1.05;
-        if (lit) { l.style.setProperty('--lx', (mx - lr.left + (l._ox || 0)).toFixed(0) + 'px'); l.style.setProperty('--ly', (my - lr.top + (l._oy || 0)).toFixed(0) + 'px'); if (!l._lit) { l._lit = 1; l.classList.add('lit'); } any = true; } else if (l._lit) { l._lit = 0; l.classList.remove('lit'); }
+        const tgt = (near && d < MR * 1.05) ? Math.pow(clamp(1 - d / (MR * 1.05)), 1.1) : 0, tp = clamp((mx - lr.left) / Math.max(lr.width, 1) * 100, -30, 130);
+        l._li = lerp(l._li || 0, tgt, kk * .45); l._lp = lerp(l._lp == null ? tp : l._lp, tp, kk * .5);
+        if (l._li > .012) { l.style.setProperty('--li', l._li.toFixed(3)); l.style.setProperty('--lp', l._lp.toFixed(0) + '%'); if (!l._lit) { l._lit = 1; l.classList.add('lit'); } any = true; } else if (l._lit) { l._lit = 0; l.classList.remove('lit'); l.style.removeProperty('--li'); }
         if (Math.abs(l._ox) + Math.abs(l._oy) + Math.abs(l._or) > .06) { any = true; l.style.translate = l._ox.toFixed(1) + 'px ' + l._oy.toFixed(1) + 'px'; l.style.rotate = l._or.toFixed(1) + 'deg'; } else { l.style.translate = ''; l.style.rotate = ''; }
       });
       g.act = any;
@@ -426,6 +476,85 @@
     e.style.translate = tx.toFixed(1) + 'px ' + ty.toFixed(1) + 'px'; e.style.scale = sc.toFixed(3); e.style.rotate = rot;
     const bl = d * 7 + x * 6; e.style.filter = bl > .3 ? 'blur(' + bl.toFixed(1) + 'px)' : '';
   }
+  /* ---- ACT02 PROBLEM director: scroll is the timeline; the beam head (cs.pHd) and the letters share one clock ---- */
+  const probCases = $$('#act2b .pcase').map(el => ({ el, num: $$('.num i', el), lt: $$('h3 .lt', el), kw: (() => { const sp = []; wrapWords($('.kow', el), sp); return sp; })(), gx: $('.gx', el), q: 0 }));
+  const PS = [.2, .4, .6], PE = [.38, .58, .76];
+  const PBG = [[190, 170, 255], [255, 255, 255]];
+  let pcMx = 0, pcMy = 0;
+  function probDirector(p, dt) {
+    const g = $('#kt2'), asp = vw / vh, head = cs ? cs.pHd : 3, ox = cs ? cs.pX : -1, ang = cs ? cs.pA : .16;
+    const still = RM || STILL, hot = still ? 0 : 1;
+    const rect = g.getBoundingClientRect(), x0 = rect.left, wdt = Math.max(rect.width, 1);
+    // title: light passes left→right, each letter goes translucent → crisp → hot-tinted under the head
+    const out2 = sm(clamp((p - .125) / .1));                       // "MEANING IS LOST." fades into its own ghost
+    g._ch.forEach((c, i) => {
+      const line2 = g._lines.indexOf(c.closest('.ln')) === 1;
+      const cr = c.getBoundingClientRect(), cx = ((cr.left + cr.width / 2) - .5 * vw) / vh;   // q-space x
+      const sx = (cx - ox) / Math.max(Math.cos(ang), .2) + (line2 ? .14 : 0);
+      const act = clamp((head - sx) / .55);
+      const near = Math.max(0, 1 - Math.abs(head - .22 - sx) / .35) * (act > 0 ? 1 : 0);
+      const e = act * act * (3 - 2 * act);
+      let op = .1 + .9 * e, bl = (1 - e) * 9, ty = (1 - e) * vh * .018, tx = 0, rot = 0;
+      if (line2) { const d = out2 * clamp(1.2 - hs(i, 1) * .5); op = op * (1 - d * .8); bl += d * 5; tx = (hs(i, 2) - .5) * d * vw * .03; ty += d * d * vh * .05 * (.3 + hs(i, 3)); rot = (hs(i, 4) - .5) * 34 * d; }
+      c.style.opacity = op.toFixed(3); c.style.filter = bl > .3 ? 'blur(' + bl.toFixed(1) + 'px)' : '';
+      c.style.transform = 'translate3d(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px,0) rotate(' + rot.toFixed(1) + 'deg)';
+      const k = near * hot, r = Math.round(236 + 19 * k - 70 * (1 - e) * 0), gg = Math.round(228 - 40 * k), bb = 255;
+      c.style.color = 'rgb(' + Math.round(244 - 90 * near * hot * (line2 ? 0 : .6)) + ',' + Math.round(238 - 70 * near * hot) + ',255)';
+    });
+    const titleOn = 1 - sm(clamp((p - .19) / .05)), tb = 1 - titleOn;
+    const pr = $('.problem'); pr.style.opacity = titleOn.toFixed(3); pr.style.visibility = titleOn > .01 ? 'visible' : 'hidden';
+    pr.style.translate = '0 ' + (-tb * vh * .05).toFixed(1) + 'px'; pr.style.filter = tb > .02 ? 'blur(' + (tb * 10).toFixed(1) + 'px)' : '';
+    const eb = $('.problem .eb'), ks = $('.problem .ko-sub');
+    eb.style.opacity = sm(clamp((p - .0) / .03)).toFixed(3); ks.style.opacity = (sm(clamp((p - .1) / .05)) * .85).toFixed(3);
+    // cases: overlapping, continuous
+    pcMx = lerp(pcMx, mouse.sx || 0, still ? 1 : 1 - Math.exp(-dt * 4)); pcMy = lerp(pcMy, mouse.sy || 0, still ? 1 : 1 - Math.exp(-dt * 4));
+    let ci = -1, best = 0;
+    probCases.forEach((c, i) => {
+      const s0 = PS[i], e0 = PE[i], inn = sm(clamp((p - s0) / .06)), outt = sm(clamp((p - e0) / .06)), op = inn * (1 - outt);
+      const on = op > .004; c.el.style.visibility = on ? 'visible' : 'hidden'; c.el.style.opacity = on ? '1' : '0';
+      if (!on) return;
+      if (op > best) { best = op; ci = i; }
+      const q = clamp((p - s0) / (e0 + .06 - s0)); c.q = q;
+      const dir = i % 2 ? -1 : 1, ex = 1 - inn, xx = outt;
+      c.el.style.setProperty('--q', q.toFixed(3)); c.el.style.setProperty('--mx', pcMx.toFixed(3)); c.el.style.setProperty('--my', pcMy.toFixed(3));
+      c.el.style.setProperty('--ca', ((q * 380 + pcMx * 70 + T * 8) % 360).toFixed(1) + 'deg');
+      // numerals: two digits slide in from opposite sides, drift while the case is read, break away on exit
+      c.num.forEach((n, j) => {
+        const sgn = j ? 1 : -1, tx = sgn * (ex * vw * .09 + (q - .5) * vw * .05 * dir + xx * vw * .08) + pcMx * (14 + j * 10), ty = ex * sgn * vh * .06 - xx * sgn * vh * .05 + pcMy * 8;
+        n.style.opacity = (op * .95).toFixed(3); n.style.transform = 'translate3d(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px,0) scale(' + (1 + ex * .18 + xx * .12).toFixed(3) + ')';
+        n.style.filter = (ex + xx) > .05 ? 'blur(' + ((ex + xx) * 14).toFixed(1) + 'px)' : '';
+      });
+      // EN title letters: sequential violet-ghost → crisp white, then dim a touch as the KO line takes over
+      const nl = c.lt.length, tp = clamp((q - .07) / .26) * (nl + 4), dim = sm(clamp((q - .55) / .25));
+      c.lt.forEach((l, k) => {
+        const a = clamp(tp - k), s2 = a * a * (3 - 2 * a), ex2 = sm(clamp((q - .86) / .14));
+        l.style.opacity = ((.1 + .9 * s2) * (1 - dim * .22) * (1 - ex2 * .9)).toFixed(3);
+        l.style.filter = a < .98 ? 'blur(' + ((1 - s2) * 8).toFixed(1) + 'px)' : '';
+        l.style.transform = 'translate3d(' + ((1 - s2) * dir * 26 + ex2 * dir * -20).toFixed(1) + 'px,' + ((1 - s2) * 22).toFixed(1) + 'px,0)';
+        const hl = Math.max(0, 1 - Math.abs(tp - k - 1) / 2.6) * (1 - s2 * .0);
+        l.style.color = hl > .02 ? 'rgb(' + Math.round(245 - 60 * hl) + ',' + Math.round(240 - 110 * hl) + ',255)' : '';
+      });
+      // KO words
+      const nk = c.kw.length, kp = clamp((q - .28) / .34) * (nk + 3), ex3 = sm(clamp((q - .84) / .16));
+      c.kw.forEach((w, k) => { const a = clamp(kp - k); w.style.opacity = ((.14 + .86 * a) * (1 - ex3 * .85)).toFixed(3); w.style.filter = a < .98 ? 'blur(' + ((1 - a) * 5).toFixed(1) + 'px)' : ''; });
+      const gp = sm(clamp(q / .25)), gs = 1 - sm(clamp((q - .86) / .14));
+      c.gx.style.opacity = (op * gp * gs).toFixed(3);
+      c.el.style.translate = (dir * ex * vw * .03 - dir * xx * vw * .03).toFixed(1) + 'px 0';
+      c.el.style.filter = (ex + xx) > .05 ? 'blur(' + ((ex + xx) * 6).toFixed(1) + 'px)' : '';
+    });
+    $$('#mini li').forEach((li, j) => li.classList.toggle('on', j === ci));
+  }
+  /* INSIGHT → PRODUCT: the next slide enters from the right instead of rising from below (scroll is the timeline) */
+  let hsOn = false;
+  function hSlide(y) {
+    const i = secs.findIndex(s => s.id === 'act2b'), s = secs[i], n = secs[i + 1]; if (!s || !n) return;
+    const z0 = n.top - vh, w0 = z0 - vh * .5, t = clamp((y - w0) / (vh * 1.5)), st = $('.stage', s.el);
+    if (t > 0 && t < 1 && !RM) {
+      const e = sm(t); hsOn = true;
+      st.style.translate = (-e * vw * .32).toFixed(1) + 'px ' + Math.max(0, y - z0).toFixed(1) + 'px'; st.style.opacity = (1 - e * .95).toFixed(3); st.style.filter = e > .05 ? 'blur(' + (e * 6).toFixed(1) + 'px)' : '';
+      n.el.style.translate = ((1 - e) * vw).toFixed(1) + 'px ' + (y - n.top).toFixed(1) + 'px';
+    } else if (hsOn) { hsOn = false; st.style.translate = ''; st.style.opacity = ''; st.style.filter = ''; n.el.style.translate = ''; }
+  }
   function updateDom(s, p, dt) {
     s.items.forEach(it => stepFx(it.e, it.fx, p, it.a, it.b));
     s.kids.forEach(k => { const q = (p - k.a) / (k.b - k.a), i = sm(clamp(q / .2)); k.e.style.opacity = clamp(i * 1.6).toFixed(3); k.e.style.translate = '0 ' + ((1 - i) * 18).toFixed(1) + 'px'; k.e.style.filter = i < .98 ? 'blur(' + ((1 - i) * 10).toFixed(1) + 'px)' : ''; });
@@ -445,6 +574,9 @@
       $('#sub1').style.opacity = (sm(clamp((t - 2.1) / 1.3)) * (1 - sm(clamp((p - .06) / .06)))).toFixed(3);
     }
     if (s.id === 'act2') {
+      // pose changes follow the dialogue: 01 face to face → 02 trying to communicate → 03 can't understand each other
+      const pv = p < .10 ? 1 : p < .44 ? 2 : 3, pt = p < .15 ? 1 : p < .44 ? 2 : 3;
+      [['#figV', pv], ['#figT', pt]].forEach(([sel, n]) => { const fg = $(sel); if (fg._pose !== n) { fg._pose = n; $$('.pose', fg).forEach(im => im.classList.toggle('on', +im.dataset.p === n)); } });
       const f = $('#figs'), foc = p >= .6 && p < .775 ? 'v' : (p >= .775 && p < .93 ? 't' : '');
       let sc = 1, tx = 0;
       if (foc) {
@@ -454,24 +586,12 @@
       const kk = STILL ? 1 : 1 - Math.exp(-dt * 4); f._s = lerp(f._s == null ? 1 : f._s, sc, kk); f._t = lerp(f._t || 0, tx, kk);
       f.style.setProperty('--s', f._s.toFixed(3)); f.style.setProperty('--tx', f._t.toFixed(1) + 'px'); f.dataset.f = foc;
     }
-    if (s.id === 'act2b') {
-      const g = $('#kt2'), pp = clamp((p - .05) / .16);
-      g._ch.forEach((c, i) => {
-        const line2 = g._lines.indexOf(c.closest('.ln')) === 1;
-        if (line2) { const drop = clamp(pp * 1.5 - .35 - hs(i, 1) * .5, 0, 1); c.style.transform = 'translate3d(' + ((hs(i, 2) - .5) * drop * 160).toFixed(1) + 'px,' + (drop * drop * vh * .35 * (.4 + hs(i, 3))).toFixed(1) + 'px,0) rotate(' + ((hs(i, 4) - .5) * 120 * drop).toFixed(1) + 'deg)'; c.style.opacity = (1 - drop * .8).toFixed(3); }
-        else { c.style.transform = 'none'; c.style.opacity = 1; }
-      });
-      const t2 = clamp((p - .05) / .08), dr = (p - .05) * 8;
-      shards.childNodes.forEach(sh => { const i = sh._k; sh.style.opacity = (sm(t2) * .85).toFixed(2); sh.style.transform = 'translate3d(' + (mouse.sx * (20 + i * 3) + Math.sin(T * .6 + i) * 18).toFixed(1) + 'px,' + (-dr * (30 + hs(i, 7) * 90) + mouse.sy * -(10 + i * 2)).toFixed(1) + 'px,0) rotate(' + ((hs(i, 8) - .5) * 90 + dr * 30 * (hs(i, 9) - .5)).toFixed(1) + 'deg)'; });
-      const ci = p >= .24 && p < .43 ? 0 : (p >= .44 && p < .63 ? 1 : (p >= .64 && p < .81 ? 2 : -1));
-      $$('#mini li').forEach((li, j) => li.classList.toggle('on', j === ci));
-    }
-    if (s.id === 'act6') {
-      if (p > .08 && p < .88) layoutSys(p);
-      const on = p >= .12 && p < .37 ? 0 : (p >= .38 && p < .65 ? 2 : (p >= .66 && p < .83 ? 4 : -1));
-      $$('#pipe li').forEach((li, j) => li.classList.toggle('on', j === on));
-      if (p < .8) aUser = false;
-      if (!aUser) setAnat(p < .86 ? -1 : Math.min(4, Math.floor((p - .86) / .14 * 5)));
+    if (s.id === 'act2b') probDirector(p, dt);
+    if (s.id === 'act1') { const sl = $('.slogan'); if (sl) sl.style.setProperty('--bp', (-60 + clamp((p - .82) / .16) * 72).toFixed(0) + '%'); }
+    if (s.id === 'act6') layoutSys(p);
+    if (s.id === 'act6a') {
+      if (p < .1) aUser = false;
+      if (!aUser) setAnat(p < .12 ? -1 : Math.min(4, Math.floor((p - .12) / .86 * 5)));
     }
     if (s.id === 'act7') {
       const v = $('#outVid'), a = sm(clamp((p - .34) / .1));
@@ -493,17 +613,25 @@
   }
   $$('a[href^="#act"],.dots a').forEach(a => a.addEventListener('click', e => { const t = $(a.getAttribute('href')); if (!t) return; e.preventDefault(); const s = secs.find(x => x.el === t); goTo(s.top + (s.pinned ? 2 : 0)); }));
   $('#restart').addEventListener('click', () => { goTo(0, true); introStart = performance.now(); introT = RM ? 9 : 0; impactDone = RM; });
-  const tl = $('#teamLink'); if (cfg.teamSite) { tl.href = cfg.teamSite; } else { tl.classList.add('off'); tl.title = 'Team site link — set teamSite in js/config.js'; tl.addEventListener('click', e => e.preventDefault()); }
+  /* team-site return: map → ../index.html?return=street#explore · game → ../game.html (set by ?from=map|game) */
+  const FROM = new URLSearchParams(location.search).get('from'), TEAM = FROM === 'game' ? '../game.html' : cfg.teamSite;
+  const tl = $('#teamLink'); if (TEAM) { tl.href = TEAM; const hb = $('#homeBtn'); if (hb) hb.href = TEAM; } else { tl.classList.add('off'); tl.title = 'Team site link — set teamSite in js/config.js'; tl.addEventListener('click', e => e.preventDefault()); }
 
   /* ------------------------------------------------------------------
      main loop
   ------------------------------------------------------------------ */
+  window.BRIDGE_Q = () => qL;
+  let qL = 0, qAcc = 0, qN = 0, qBad = 0, qT0 = 0;
   let T = 0, ss = 0, vel = 0, flow = 0, last = 0, cs = null, ready = false, glOK = false, speed = 0, foodV = 0;
   const hudAct = $('#hudAct'), hudName = $('#hudName'), progBar = $('#progBar'), foodNote = $('#foodNote');
   let hsWas = false;
   function frame(now) {
     requestAnimationFrame(frame);
-    const dt = Math.min(.05, (now - last) / 1000 || .016); last = now; T += dt;
+    const raw = (now - last) / 1000;
+    if (ready && glOK && !STILL && !document.hidden && raw > 0 && raw < .25) {   // automatic quality: if the page stays under ~35 fps, step the render resolution / ray steps down
+      if (!qT0) qT0 = now; if (now - qT0 > 3000) { qAcc += raw; qN++; if (qAcc > 1.6) { const fps = qN / qAcc; qBad = fps < 35 ? qBad + 1 : 0; qAcc = 0; qN = 0; if (qBad >= 2 && qL < 2) { qL++; qBad = 0; resize(); } } }
+    }
+    const dt = Math.min(.05, raw || .016); last = now; T += dt;
     const y = scrollY, pss = ss; ss = (RM || STILL) ? y : lerp(ss, y, 1 - Math.exp(-dt * 9)); vel = (ss - pss) / dt;
     speed = lerp(speed, clamp(Math.abs(vel) / 3200), 1 - Math.exp(-dt * 6));
     mouse.sx = lerp(mouse.sx, mouse.x, 1 - Math.exp(-dt * 5)); mouse.sy = lerp(mouse.sy, mouse.y, 1 - Math.exp(-dt * 5));
@@ -513,7 +641,9 @@
     let ci = 0; for (let k = 0; k < secs.length; k++) if (ss >= secs[k].top - .5) ci = k;
     const mid = ss + vh * .45; let ui = 0; for (let k = 0; k < secs.length; k++) if (mid >= secs[k].top) ui = k;
     const sec = secs[ci], p = secP(sec, ss);
+    mcuS.a = 0;
     secs.forEach(s => { if (ss > s.top - vh * 1.2 && ss < s.top + s.h + vh * .2) updateDom(s, secP(s, ss), dt); });
+    hSlide(ss);
     const us = secs[ui]; hudAct.textContent = 'ACT 0' + us.ui; hudName.textContent = us.name;
     $$('.dots a').forEach(a => a.setAttribute('aria-current', +a.dataset.ui === us.ui));
     progBar.style.transform = 'scaleX(' + clamp(ss / Math.max(1, document.documentElement.scrollHeight - vh)).toFixed(4) + ')';
@@ -555,6 +685,7 @@
       if (hsPos[si].wx != null) S.spot = [hsPos[si].wx, hsPos[si].wy, hsPos[si].wz]; S.spotA = spotA;
       S.beam = cs.beam * (1 - .75 * sm(hsF)); S.vis = cs.vis; S.rot = rotU + tiltV; S.food = foodV;
       flow += dt * (RM ? 0 : .7) + Math.abs(ss - pss) * .004 * (RM ? 0 : 1);
+      S.mcu = mcuS.a; S.mcuX = mcuS.x; S.mcuY = mcuS.y; S.mcuR = mcuS.r; S.mcuK = mcuS.k; S.mcuH = mcuS.h || 0;
       S.flow = flow; S.speed = speed; S.t = T; S.mouse = [mouse.sx, mouse.sy]; S.scroll = ss / vh;
       S.warp = RM ? 0 : clamp(cs.warp + speed * .12 * (cs.part > .1 ? 1 : 0)); S.flash = RM ? 0 : cs.flash;
       if (RM) S.part *= .5;
@@ -572,7 +703,8 @@
   ------------------------------------------------------------------ */
   let ldp = 0; const setLd = v => { ldp = Math.max(ldp, v); $('#ldn').textContent = Math.round(ldp * 100); $('#ldb').style.width = ldp * 100 + '%'; };
   function resize() {
-    measure(); const mob = small(), dpr = Math.min(window.devicePixelRatio || 1, mob ? 1.5 : 2);
+    measure(); const mob = small(), dpr = Math.min(window.devicePixelRatio || 1, mob ? 1.5 : 2, [2, 1.25, 1][qL]);
+    if (glOK && BR.setQ) BR.setQ([52, 34, 22][qL]);
     if (glOK) BR.resize(vw, vh, dpr);
     aSel = -2; setAnat(-1);
   }

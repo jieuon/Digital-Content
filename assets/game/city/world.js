@@ -373,7 +373,7 @@ collide(-64,-24,-58,124,'edge');collide(58,-24,64,124,'edge');collide(-64,-26,64
   // [V11] the podium now carries a real shopping basket with the SMART BASKET DISPLAY hooked on its front rim (facing the street)
   W.products.push({id:0,key:'p2',pos:[px,.76,pz],zone:'올리브영 매장 안 · 쇼윈도',nav:[HW-.9,47.6],beaconH:.95,ringR:.8,reach:3.0,
     models:[{part:'mBasket',p:[px+.02,.76,pz],ry:-Math.PI/2,s:1.15,main:true},
-            {part:'mBasketDisp',p:[px+.02-.158*1.15,.76+.232*1.15,pz],ry:-Math.PI/2,s:1.15,main:true}]});
+            {part:'mBasketDisp',p:[px-.16,.76+.262,pz],ry:-Math.PI/2,rx:.5,s:1.15,main:true}]});
   mb.cyl([px,0,pz],[px,.72,pz],.5,.46,28,hex('#f2f4ee'),m(0));mb.cyl([px,.72,pz],[px,.76,pz],.48,.48,28,hex('#c5ff35'),m(MAT.emis,1.8));
   mb.box(11.55,0,46.3,11.7,2.7,48.9,hex('#e9f3e4'),m(0));dm.quad([11.54,.4,48.7],[11.54,.4,46.5],[11.54,2.5,46.5],[11.54,2.5,48.7],hex('#dfffc0'),m(MAT.emis,.32),undefined,[-1,0,0]);
   mb.box(10.0,3.9,47.0,11.1,4.38,48.2,hex('#1c1b22'),m(MAT.metal));mb.box(10.2,3.88,47.2,10.9,3.9,48.0,hex('#ffffff'),m(MAT.emis,2));

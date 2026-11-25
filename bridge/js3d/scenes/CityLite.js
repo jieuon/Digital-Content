@@ -25,6 +25,15 @@ export class CityLite {
     this._lights();
     this._screens();
     this.crowd = new Crowd(scene, QUALITY.people);
+    // crowd rules: no walking through the stall row, and an open view corridor in front of / behind the main stall
+    const a = this.anchor;
+    this.crowd.setKeepOut({
+      stallBand: { x0: 4.3, x1: 6.55, z0: -56.5, z1: -4.6 },
+      corridors: [
+        { x0: a.x + 1.1, x1: a.x + 6.6, z0: a.z - 3.8, z1: a.z + 12.5, axis: 'x', to: 1 },       // street side of the main stall (camera approach)
+        { x0: a.x - 3.2, x1: a.x - 0.8, z0: a.z - 3.6, z1: a.z + 3.6, axis: 'z' }                 // behind the stall (stage 05 view)
+      ]
+    });
   }
 
   // dark environment with a few neon panels → believable reflections on metal/paint
@@ -256,6 +265,18 @@ export class CityLite {
     };
     B.build(materials, this.scene, { cast: false, receive: true });
     this.lampPos = lampPos;
+    if (this.heroSign) {
+      const c = document.createElement('canvas'); c.width = 1024; c.height = 300; const g = c.getContext('2d');
+      g.fillStyle = '#17121f'; g.fillRect(0, 0, 1024, 300);
+      g.strokeStyle = 'rgba(164,124,255,0.9)'; g.lineWidth = 6; g.strokeRect(8, 8, 1008, 284);
+      g.fillStyle = '#f2eefb'; g.textBaseline = 'middle';
+      g.font = '800 150px Pretendard, Noto Sans KR, Arial, sans-serif'; g.textAlign = 'left'; g.fillText('떡볶이', 52, 150);
+      g.font = '600 64px Pretendard, Arial, sans-serif'; g.fillStyle = '#c5ff35'; g.textAlign = 'right'; g.fillText('TTEOKBOKKI', 976, 118);
+      g.font = '500 44px Pretendard, Arial, sans-serif'; g.fillStyle = '#b9b3d0'; g.fillText('₩4,000', 976, 196);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.4), new THREE.MeshBasicMaterial({ map: t, color: new THREE.Color(0.8, 0.78, 0.86), toneMapped: false }));
+      m.applyMatrix4(this.heroSign.M); this.scene.add(m); this.heroSignMesh = m;
+    }
   }
 
   _stall(B, x, z, side, atlas, hero = false) {
@@ -285,9 +306,17 @@ export class CityLite {
     B.add('stall', new THREE.CylinderGeometry(0.22, 0.24, 0.12, 16), L(W / 2 - 0.45, 1.11, 0), 0x2a2a2e);
     if (!hero) for (let k = 0; k < 6; k++) B.add('stall', new THREE.CylinderGeometry(0.008, 0.008, 0.4, 4), L(-0.4 + k * 0.08, 1.2, 0.3, 0.3), 0xc9a26b);
     // menu board + bulbs
-    const [t, p] = STALL_MENU[(R() * STALL_MENU.length) | 0];
-    const r = atlas.menu(t, p, { bg: '#f7f2e6', fg: '#b4262f' });
-    B.add('signs', atlasPlane(1.1, 0.55, r), L(0, 1.85, D / 2 + 0.32), 0xffffff);
+    const rIdx = (R() * STALL_MENU.length) | 0;
+    if (hero) {
+      // main stall: a slim TTEOKBOKKI lightbox on top of the roof frame — never in front of the vendor or the gate
+      B.add('metal', new THREE.BoxGeometry(1.56, 0.46, 0.07), L(0, 2.74, D / 2 + 0.2), 0x0d0d10);
+      this.heroSign = { M: L(0, 2.74, D / 2 + 0.2 + 0.042) };
+    } else {
+      const nbr = STALL_MENU.filter(m => m[0] !== '떡볶이');
+      const [t, p] = nbr[(this.stallPos.length * 7 + rIdx) % nbr.length];
+      const r = atlas.menu(t, p, { bg: '#f7f2e6', fg: '#b4262f' });
+      B.add('signs', atlasPlane(0.8, 0.4, r), L(0, 2.55, D / 2 + 0.45), 0xffffff);
+    }
     for (let k = 0; k < 4; k++) B.add('bulb', new THREE.SphereGeometry(0.055, 8, 6), L(-W / 2 + 0.3 + k * (W - 0.6) / 3, 2.1, 0.3), 0xffffff);
     this.stallLights = this.stallLights || [];
     this.stallLights.push(new THREE.Vector3(0, 2.0, 0.4).applyMatrix4(M));

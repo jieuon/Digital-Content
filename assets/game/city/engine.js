@@ -404,7 +404,7 @@ CE.Renderer=class{
     const fb=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
     if(depth){const rb=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,rb);gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT24,w,h);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,rb)}
     return{t,fb,w,h}}
-  resize(){const gl=this.gl,dpr=Math.min(devicePixelRatio||1,1.5),cw=this.cv.clientWidth||innerWidth,ch=this.cv.clientHeight||innerHeight;
+  resize(){const gl=this.gl,dpr=Math.min(devicePixelRatio||1,matchMedia("(pointer: coarse)").matches?1.25:1.5),cw=this.cv.clientWidth||innerWidth,ch=this.cv.clientHeight||innerHeight;
     let s=dpr*this.scale;if(cw*s>1920)s=1920/cw;const w=Math.max(2,Math.round(cw*s)),h=Math.max(2,Math.round(ch*s));
     if(this.W===w&&this.H===h)return;this.W=w;this.H=h;this.cv.width=w;this.cv.height=h;
     this.rtMain=this.makeTarget(w,h,true);const bw=Math.max(2,w>>2),bh=Math.max(2,h>>2);this.rtA=this.makeTarget(bw,bh);this.rtB=this.makeTarget(bw,bh);

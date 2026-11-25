@@ -88,7 +88,7 @@ void main(){
   SH.bg = {
     vs: VS_FS, fs: `#version 300 es
 precision highp float;out vec4 o;
-uniform vec2 uRes,uMouse,uModel,uFloor;uniform float uT,uScroll,uPurple,uLime,uDark,uHBand,uFloorA,uWarpBg,uDoorA,uDoorZ,uHalo,uSolid,uBeam,uWave;uniform vec3 uLed;
+uniform vec2 uRes,uMouse,uModel,uFloor;uniform float uT,uScroll,uPurple,uLime,uDark,uHBand,uFloorA,uWarpBg,uDoorA,uDoorZ,uHalo,uSolid,uBeam,uWave,uGate,uGateA,uArc,uPA,uPX,uPY,uPW,uPF,uPH,uPI,uPS,uPB,uPHd,uTun,uTz,uHz,uMcu,uMcuK,uMcuH,uQ;uniform vec3 uLed,uMcuP;
 ${HASH}
 float nz(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1,0)),f.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*nz(p);p=p*2.03+vec2(17.1,9.7);a*=.5;}return s;}
@@ -121,6 +121,159 @@ vec3 doorFx(vec2 uv,float asp,float z,float t){
   return c;
 }
 
+/* LIGHT BEYOND THE GATE: a dark hall, a gate seam leaking purple light into the space and onto the floor */
+vec3 gateLeak(vec2 uv,float asp,float g,float t,vec2 ms){
+  vec2 q=(uv-vec2(.5+ms.x*.014,.47))*vec2(asp,1.);
+  float ax=abs(q.x);float axs=ax*max(1.,1.5/asp);
+  float w=mix(.0048,.105,pow(g,1.25))*(1.+.025*sin(t*.9));
+  float hh=mix(.33,.19,g);
+  vec3 c=vec3(0.);
+  for(int i=0;i<4;i++){float fi=float(i);
+    float xi=.17+fi*.18+g*.05;float Hh=hh+.07+fi*.09;
+    float inY=smoothstep(Hh,Hh-.06,abs(q.y));
+    c+=vec3(.62,.48,1.)*exp(-pow((ax-xi)/.0016,2.))*inY*.55*exp(-ax*2.4);
+    c+=vec3(.30,.14,.78)*smoothstep(xi,xi-.012,ax)*smoothstep(xi-.18,xi-.02,ax)*inY*.05*exp(-ax*2.);
+  }
+  float inside=smoothstep(w+.0016,w-.0016,ax)*smoothstep(hh+.003,hh-.003,abs(q.y));
+  c+=mix(vec3(.58,.34,1.),vec3(1.,.95,1.),exp(-ax/(w+.002)*1.1))*inside*1.15;
+  float v=smoothstep(hh+.20,hh-.02,abs(q.y));
+  float side=1.+ms.x*sign(q.x)*.18;
+  c+=vec3(.46,.2,1.)*exp(-max(axs-w,0.)*5.2)*v*.5*side;
+  c+=vec3(.86,.72,1.)*exp(-max(axs-w,0.)*24.)*v*.34;
+  if(q.y>hh)c+=vec3(.46,.24,1.)*exp(-(q.y-hh)*8.)*exp(-axs*4.5)*.12;
+  float fl=-hh;
+  if(q.y<fl){float d=fl-q.y;
+    c+=vec3(.78,.58,1.)*exp(-d*5.5)*exp(-ax*ax/(w*w*5.+.0012))*.55;
+    c+=vec3(.40,.16,.95)*exp(-d*3.1)*exp(-axs*3.1)*.42;
+    float gx=q.x/(d+.045)*.55;float ln=smoothstep(.482,.5,abs(fract(gx)-.5));
+    c+=vec3(.52,.32,1.)*ln*exp(-d*4.)*exp(-ax*2.)*.2;
+    float gz=.012/(d+.01);c+=vec3(.5,.3,1.)*smoothstep(.485,.5,abs(fract(gz-t*.02)-.5))*exp(-d*3.)*exp(-ax*2.)*.12;
+  }
+  return c;
+}
+/* refined curved light trails: thin luminous arcs whose position, curvature and reflection direction follow the cursor */
+vec3 arcLight(vec2 uv,float asp,float t,vec2 ms){
+  vec2 q=(uv-.5)*vec2(asp,1.);vec3 c=vec3(0.);
+  for(int i=0;i<3;i++){float fi=float(i);
+    float sd=mod(fi,2.)<.5?-1.:1.;
+    vec2 ctr=vec2(sd*(.64+fi*.08)+ms.x*.07*(1.+fi*.5),-.10+fi*.11+ms.y*.05);
+    float R=.52+fi*.14+ms.y*.035+.012*sin(t*.3+fi*2.);
+    float d=length(q-ctr)-R;
+    float ang=atan(q.y-ctr.y,q.x-ctr.x);
+    float lit=pow(.5+.5*cos(ang-(sd<0.?0.:3.14159)+ms.x*.8+fi*.45),2.2);
+    vec3 tint=mix(vec3(.42,.2,1.),vec3(.95,.9,1.),lit);
+    c+=tint*(exp(-d*d*110000.)*1.1+exp(-d*d*320.)*.2)*(.12+.88*lit);
+    c+=vec3(.3,.14,.8)*exp(-pow((d+.075)/.055,2.))*lit*.16;
+  }
+  return c;
+}
+
+/* PROBLEM: grainy anamorphic light, bent by fluted glass. A hot white-lavender core leaves a source, widens into violet and ends on a cold blue edge. */
+vec3 beamCol(float c,float w,float hue){
+  float cw=c/max(w,.001);
+  float core=exp(-cw*cw*6.);
+  float body=exp(-abs(cw)*(c<0.?.9:2.2));
+  float edge=exp(-pow(cw-.85,2.)*7.)*step(0.,c);
+  vec3 violet=vec3(.50,.14,1.),blue=vec3(.08,.16,1.),lav=vec3(.80,.70,1.);
+  return vec3(.97,.92,1.)*core*1.05+mix(violet,blue,hue*.8)*body*.7+mix(lav,blue,hue)*edge*.45;
+}
+vec3 probBeam(vec2 q,vec2 o,float ang,float w0,float hue,float flute,float brk,float head,float t,vec2 ms){
+  vec2 d=q-o;float ca=cos(ang),sa=sin(ang);
+  float s=d.x*ca+d.y*sa,c=-d.x*sa+d.y*ca;
+  float pitch=mix(.07,.03,smoothstep(-.7,.9,q.x));
+  float f=fract((q.x+.02*sin(q.y*2.6+q.x*1.7)+.012*fbm(q*3.+t*.02)+ms.x*.04+t*.004)/pitch);
+  c+=(f-.5)*flute*.1*(.4+smoothstep(0.,.8,s));
+  float w=w0*(.3+1.6*max(s,0.));
+  vec3 col=beamCol(c,w,hue);
+  col*=mix(1.,.5+.8*smoothstep(0.,1.,f),flute*.75);
+  float tap=smoothstep(-.15,.12,s)*exp(-max(s,0.)*.5)*smoothstep(head,head-.45,s);
+  float cut=mix(1.,smoothstep(.28,.55,fbm(vec2(s*5.+t*.05,c*16.))),brk);
+  return col*tap*cut;
+}
+vec3 pb3(vec2 q,vec2 o,float ang,float ds,vec2 ms){
+  vec3 a=probBeam(q+vec2(ds,0.),o,ang,uPW,uPH,uPF,uPB,uPHd,uT,ms);
+  vec3 b=probBeam(q,o,ang,uPW,uPH,uPF,uPB,uPHd,uT,ms);
+  vec3 c=probBeam(q-vec2(ds,0.),o,ang,uPW,uPH,uPF,uPB,uPHd,uT,ms);
+  return vec3(a.r,b.g,c.b);
+}
+
+/* ACT01 → light tunnel: soft grainy light traces rush toward a white core (no hairlines — wide, bloomed traces) */
+vec3 tunnelFx(vec2 uv,float asp,float tz,float t,vec2 ms){
+  vec2 p=(uv-.5-ms*vec2(.025,.02))*vec2(asp,1.);
+  float r=length(p)+1e-4;float a=atan(p.y,p.x);
+  float z=.1/r+tz;
+  vec3 col=vec3(0.);
+  float N=84.;float ai=(a/6.2831853+.5)*N;float id=floor(ai);float f=fract(ai);
+  float h=h21(vec2(id,5.3));
+  float zc=z*(.55+h*.7)+h*40.;float seg=floor(zc),sf=fract(zc);
+  float on=step(.5,h21(vec2(id,seg)));
+  float lw=.12+.16*h21(vec2(id,2.2));
+  float tr=smoothstep(lw,0.,abs(f-.5)-.02)*on*smoothstep(0.,.2,sf)*smoothstep(1.,.6,sf);
+  vec3 lc=mix(vec3(.18,.38,1.),vec3(.9,.32,1.),h21(vec2(id,8.8)));
+  float df=smoothstep(0.,.1,r)*(.3+.7*exp(-r*1.6));
+  col+=lc*tr*df*1.9;
+  float zr=z*.5;float zi=floor(zr),zf=fract(zr);
+  float gate=step(.7,h21(vec2(floor(ai*.2),zi+11.)));
+  col+=vec3(.6,.5,1.)*smoothstep(.09,0.,abs(zf-.5))*gate*df*.8;
+  col+=vec3(.86,.82,1.)*(exp(-r*8.)*1.2+exp(-r*2.6)*.2)+vec3(.4,.2,1.)*exp(-r*1.4)*.1;
+  col*=.88+.24*h21(gl_FragCoord.xy+t);
+  return col;
+}
+/* a lit horizon with a soft mirror below — the quiet end of the gate passage */
+vec3 horizonFx(vec2 uv,float asp,float t,vec2 ms){
+  vec2 q=(uv-vec2(.5+ms.x*.025,.54))*vec2(asp,1.);
+  float y=q.y,ay=abs(y);float m=y<0.?.5:1.;
+  float core=exp(-length(q*vec2(1.,2.4))*6.5);
+  float st=exp(-ay*30.)*exp(-abs(q.x)*1.05)*m;
+  float rays=exp(-abs(q.x)*4.2)*exp(-ay*1.5)*m*smoothstep(-.02,.22,ay);
+  float dome=exp(-q.x*q.x*1.3)*exp(-ay*2.3)*(y>0.?1.:.45);
+  vec3 c=vec3(1.,.92,1.)*core*1.2+vec3(.9,.72,1.)*st*.8+vec3(.5,.2,1.)*rays*.3+vec3(.32,.1,.95)*dome*.22;
+  return c*(.9+.2*h21(gl_FragCoord.xy-t));
+}
+/* MCU AI: a liquid-chrome amorphous body (ray-marched), lit by soft boxes and an iridescent film */
+vec2 gMs;
+mat2 mrot(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}
+float smn(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.,1.);return mix(b,a,h)-k*h*(1.-h);}
+float mcuMap(vec3 p,float t,float k){
+  p.xz=mrot(t*.3+gMs.x*.8+k*1.6)*p.xz;p.yz=mrot(.35*sin(t*.2)+gMs.y*.5+k*.5)*p.yz;
+  float w=.2+.06*k;
+  float d=length(p)-.5+w*sin(p.x*3.1+t*.7)*sin(p.y*2.7-t*.5)*sin(p.z*3.3+t*.6);
+  float an=atan(p.z,p.x);vec2 q=vec2(length(p.xz)-.7-.12*sin(an*2.+t*.5),p.y*1.1+.18*sin(an*3.+t*.7));
+  float tor=length(q)-.11-.05*sin(an*3.+t*.8+k*2.);
+  return smn(d,tor,.22);
+}
+vec3 mcuEnv(vec3 r,float t){
+  float y=r.y;
+  vec3 c=mix(vec3(.06,.03,.2),vec3(.4,.2,.9),smoothstep(-.9,.9,y));c+=vec3(1.,.5,.8)*smoothstep(.2,1.,sin(r.x*2.4+y*2.+t*.2))*.25;c+=vec3(.3,.8,1.)*smoothstep(.3,1.,sin(r.z*3.-r.x*1.5-t*.25))*.2;
+  c+=vec3(1.,.84,1.)*pow(max(dot(r,normalize(vec3(-.5,.8,.6))),0.),34.)*1.6;
+  c+=vec3(.3,.5,1.)*pow(max(dot(r,normalize(vec3(.8,.1,.5))),0.),16.)*1.2;
+  c+=vec3(1.,.42,.9)*pow(max(dot(r,normalize(vec3(.1,-.7,.7))),0.),12.)*.95;
+  c+=vec3(.5,.9,1.)*exp(-abs(y+.12+.1*sin(r.x*3.+t*.4))*16.)*.5;
+  c=mix(c,c*vec3(.75,.95,1.3),(1.-uMcuH)*.25);
+  c=mix(c,c*vec3(.95,1.3,.55)+vec3(.04,.1,0.),clamp((uMcuH-.65)*2.8,0.,1.)*.55);
+  c+=vec3(.9,.8,1.)*clamp(1.-abs(uMcuH-.5)*5.,0.,1.)*pow(max(dot(r,normalize(vec3(0.,.3,1.))),0.),8.)*.35;
+  return c;
+}
+vec4 mcuFx(vec2 uv,float asp,vec3 P,float t,float k,vec2 ms){
+  vec2 q=(uv-P.xy)*vec2(asp,1.)/P.z;float rr=length(q);
+  vec3 col=vec3(.34,.12,.9)*exp(-rr*rr*1.5)*.3;float al=0.;
+  if(rr<1.5){
+    gMs=ms;vec3 ro=vec3(0.,0.,3.),rd=normalize(vec3(q*.3,-1.));
+    float d=0.,h=1.,md=9.;
+    for(int i=0;i<52;i++){if(float(i)>uQ)break;vec3 pp=ro+rd*d;h=mcuMap(pp,t,k);md=min(md,h);if(h<.0025||d>5.)break;d+=h*.9;}
+    if(h<.006&&d<5.){
+      vec3 pp=ro+rd*d;vec2 e=vec2(.004,-.004);
+      vec3 n=normalize(e.xyy*mcuMap(pp+e.xyy,t,k)+e.yyx*mcuMap(pp+e.yyx,t,k)+e.yxy*mcuMap(pp+e.yxy,t,k)+e.xxx*mcuMap(pp+e.xxx,t,k));
+      vec3 r=reflect(rd,n);float fr=pow(1.-max(dot(-rd,n),0.),3.);
+      vec3 c=mcuEnv(r,t)*(.9+.9*fr);
+      vec3 iri=.5+.5*cos(6.2832*(fr*1.3+vec3(0.,.33,.67)+t*.03));
+      c=mix(c,c*iri*1.7,.36)+vec3(.7,.5,1.)*fr*.45;
+      col=c;al=1.;
+    }else col+=vec3(.55,.35,1.)*exp(-md*12.)*.25;
+  }
+  return vec4(col,al);
+}
+
 void main(){
   vec2 uv=gl_FragCoord.xy/uRes;float asp=uRes.x/uRes.y;
   vec2 p=(uv-.5)*vec2(asp,1.)*1.5;p.y+=uScroll*.4;p+=uMouse*.05;
@@ -134,10 +287,10 @@ void main(){
   col=mix(col,graph,smoothstep(.3,.75,r.x)*.3);
   float m=smoothstep(.42,.86,f+(n-.5)*.12);
   float edge=smoothstep(.3,.6,f)*(1.-smoothstep(.6,.9,f));
-  col+=pur*(m*.5+edge*.12)*uPurple;
-  col+=vec3(.12,.2,.8)*smoothstep(.5,.9,fbm(p*.8+r*2.+7.))*.22*uPurple;
+  col+=pur*(m*.34+edge*.06)*uPurple;
+  col+=vec3(.12,.2,.8)*smoothstep(.5,.9,fbm(p*.8+r*2.+7.))*.08*uPurple;
   float l=smoothstep(.66,.9,fbm(p*1.15+q*2.+vec2(3.,t*2.))+(n-.5)*.16);
-  col+=lime*l*.34*uLime*smoothstep(-.1,.9,uv.x*.5+(1.-uv.y)*.7);
+  col+=lime*l*.1*uLime*smoothstep(-.1,.9,uv.x*.5+(1.-uv.y)*.7);
   float md=length((uv-uMouse*.5-.5)*vec2(asp,1.));col+=pur*exp(-md*md*7.)*.1;
   vec2 d=(uv-uModel)*vec2(asp,1.);float rr=length(d);
   col+=uLed*exp(-rr*rr*2.4)*.05;
@@ -170,11 +323,25 @@ void main(){
       float dd=abs(uv.y-y);wv+=exp(-dd*dd*30000.)*.9+exp(-dd*dd*500.)*.07;}
     col+=mix(pur*1.5,lime,smoothstep(.25,.95,uv.x+.15*sin(uT*.2)))*wv*uWave*.32;
   }
+  if(uPI>.001){
+    vec2 qq=(uv-.5)*vec2(asp,1.);
+    vec2 o=vec2(uPX,uPY)+uMouse*vec2(.07,.05);
+    float a=uPA+uMouse.y*.08,ds=.003+.004*uPF+.006*uPB;
+    vec3 L=pb3(qq,o,a,ds,uMouse);
+    if(uPS>.001)L+=pb3(qq,vec2(-uPX,-uPY-uPS*.2)-uMouse*vec2(.07,.05),a+3.14159,ds,uMouse)*.85;
+    float gr=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233))+uT)*43758.5453);
+    col+=L*(.82+.36*gr)*uPI;
+  }
+  if(uArc>.001)col+=arcLight(uv,asp,uT,uMouse)*uArc;
   col*=1.-.55*uDoorA;
+  if(uGateA>.001)col+=gateLeak(uv,asp,uGate,uT,uMouse)*uGateA;
   if(uDoorA>.001){col+=doorFx(uv,asp,uDoorZ,uT)*uDoorA;}
+  if(uTun>.001)col=col*(1.-.5*uTun)+tunnelFx(uv,asp,uTz,uT,uMouse)*uTun;
+  if(uHz>.001)col+=horizonFx(uv,asp,uT,uMouse)*uHz;
+  if(uMcu>.001){vec4 mb=mcuFx(uv,asp,uMcuP,uT,uMcuK,uMouse);col=mix(col+vec3(mb.rgb*.0),mb.rgb,mb.a*uMcu)+(mb.a>0.?vec3(0.):mb.rgb*uMcu);}
   col*=1.-uDark*.65;
   col*=1.-.55*smoothstep(.55,1.15,length((uv-.5)*vec2(asp*.7,1.)));
-  float lum=dot(col,vec3(.3,.6,.1));col+=(n-.5)*.04*smoothstep(0.,.25,lum);
+  float lum=dot(col,vec3(.3,.6,.1));col+=(n-.5)*.026*smoothstep(0.,.25,lum);
   o=vec4(col,1.);
 }`
   };
@@ -377,14 +544,76 @@ void main(){
     G.cube = mkMesh(cp, cn, ci);
   }
   function TRS(t, s) { return new Float32Array([s[0], 0, 0, 0, 0, s[1], 0, 0, 0, 0, s[2], 0, t[0], t[1], t[2], 1]); }
+  // translate · yaw · roll · scale (column-major)
+  function TRSR(t, s, ry, rz) {
+    const cy = Math.cos(ry), sy = Math.sin(ry), c = Math.cos(rz), sn = Math.sin(rz);
+    return new Float32Array([cy * c * s[0], sn * s[0], -sy * c * s[0], 0, -cy * sn * s[1], c * s[1], sy * sn * s[1], 0, sy * s[2], 0, cy * s[2], 0, t[0], t[1], t[2], 1]);
+  }
+  // revolve a [x, r] profile around the X axis (rice cake: a rounded cylinder lying on its side)
+  function revolveX(prof, seg) {
+    const P = [], N = [], I = [], n = prof.length, pn = [];
+    for (let i = 0; i < n; i++) {
+      const a = prof[Math.max(0, i - 1)], b = prof[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dr = b[1] - a[1], l = Math.hypot(dx, dr) || 1;
+      pn.push([-dr / l, dx / l]);
+    }
+    for (let i = 0; i < n; i++) for (let j = 0; j <= seg; j++) { const ph = j / seg * Math.PI * 2, c = Math.cos(ph), s = Math.sin(ph); P.push(prof[i][0], prof[i][1] * c, prof[i][1] * s); N.push(pn[i][0], pn[i][1] * c, pn[i][1] * s); }
+    for (let i = 0; i < n - 1; i++) for (let j = 0; j < seg; j++) { const a = i * (seg + 1) + j, b = a + seg + 1; I.push(a, a + 1, b, a + 1, b + 1, b); }
+    return mkMesh(P, N, I);
+  }
+  // unit frustum (y 0..1): a paper tray / sauce slab — bottom 0.84, top 1.0 half-extent
+  function frustum(k) {
+    const P = [], N = [], I = [], v = (x, y, z) => [x, y, z];
+    const quad = (p0, p1, p2, p3) => {
+      const u = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]], w = [p3[0] - p0[0], p3[1] - p0[1], p3[2] - p0[2]];
+      let nx = u[1] * w[2] - u[2] * w[1], ny = u[2] * w[0] - u[0] * w[2], nz = u[0] * w[1] - u[1] * w[0]; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+      const o = P.length / 3; [p0, p1, p2, p3].forEach(p => { P.push(...p); N.push(nx, ny, nz); }); I.push(o, o + 1, o + 2, o, o + 2, o + 3);
+    };
+    const b = k, t = 1;
+    quad(v(-b, 0, b), v(b, 0, b), v(t, 1, t), v(-t, 1, t));       // +z
+    quad(v(b, 0, -b), v(-b, 0, -b), v(-t, 1, -t), v(t, 1, -t));   // -z
+    quad(v(b, 0, b), v(b, 0, -b), v(t, 1, -t), v(t, 1, t));       // +x
+    quad(v(-b, 0, -b), v(-b, 0, b), v(-t, 1, t), v(-t, 1, -t));   // -x
+    quad(v(-t, 1, t), v(t, 1, t), v(t, 1, -t), v(-t, 1, -t));     // top
+    quad(v(-b, 0, -b), v(b, 0, -b), v(b, 0, b), v(-b, 0, b));     // bottom
+    return mkMesh(P, N, I);
+  }
+  function buildFoodMeshes() {
+    const P = [], N = [], I = [], A = 20, B = 14;
+    for (let j = 0; j <= B; j++) for (let i = 0; i <= A; i++) { const th = j / B * Math.PI, ph = i / A * Math.PI * 2, x = Math.sin(th) * Math.cos(ph), y = Math.cos(th), z = Math.sin(th) * Math.sin(ph); P.push(x, y, z); N.push(x, y, z); }
+    for (let j = 0; j < B; j++) for (let i = 0; i < A; i++) { const a = j * (A + 1) + i, b = a + A + 1; I.push(a, b, a + 1, b, b + 1, a + 1); }
+    G.sphere = mkMesh(P, N, I);
+    const cp = [], cn = [], ci = []; const f = [[[1, 0, 0], [0, 1, 0], [0, 0, 1]], [[-1, 0, 0], [0, 0, 1], [0, 1, 0]], [[0, 1, 0], [0, 0, 1], [1, 0, 0]], [[0, -1, 0], [1, 0, 0], [0, 0, 1]], [[0, 0, 1], [1, 0, 0], [0, 1, 0]], [[0, 0, -1], [0, 1, 0], [1, 0, 0]]];
+    f.forEach(([n, u, v], k) => { [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => { cp.push(n[0] + u[0] * a + v[0] * b, n[1] + u[1] * a + v[1] * b, n[2] + u[2] * a + v[2] * b); cn.push(...n); }); ci.push(k * 4, k * 4 + 1, k * 4 + 2, k * 4, k * 4 + 2, k * 4 + 3); });
+    G.cube = mkMesh(cp, cn, ci);
+    G.cake = revolveX([[-1, 0], [-1, .5], [-.975, .8], [-.92, .93], [-.84, 1], [.84, 1], [.92, .93], [.975, .8], [1, .5], [1, 0]], 18);
+    G.tray = frustum(.84);
+    // deterministic layout of the tteokbokki pile (rice cakes in 3 loose layers, fish cake pieces, sauce)
+    let sd = 7; const rnd = () => { sd = (sd * 1664525 + 1013904223) >>> 0; return sd / 4294967296; };
+    const cakes = [];
+    [[11, .05, .3, .14], [7, .095, .24, .1], [3, .138, .14, .06]].forEach(([n, y, rx, rz]) => {
+      for (let i = 0; i < n; i++) {
+        const ang = i / n * Math.PI * 2 + rnd() * .8, rr = Math.sqrt(rnd()) * 0.98;
+        cakes.push({ x: Math.cos(ang) * rx * rr, y: y + rnd() * .008, z: Math.sin(ang) * rz * rr, ry: rnd() * Math.PI, rz: (rnd() - .5) * .35, L: .068 + rnd() * .018, r: .026 + rnd() * .004, tone: rnd() });
+      }
+    });
+    const fish = [[-.2, .06, .02, .7, .12], [.1, .085, -.06, -.5, -.1], [.22, .1, .05, 1.9, .2], [-.05, .125, .0, .2, -.15]].map(([x, y, z, ry, rz]) => ({ x, y, z, ry, rz }));
+    const blobs = []; for (let i = 0; i < 6; i++) blobs.push({ x: (rnd() - .5) * .5, y: .1 + rnd() * .05, z: (rnd() - .5) * .22, s: .02 + rnd() * .018 });
+    const bits = []; for (let i = 0; i < 9; i++) bits.push({ x: (rnd() - .5) * .5, y: .15 + rnd() * .03, z: (rnd() - .5) * .22, ry: rnd() * 3 });
+    G.pile = { cakes, fish, blobs, bits };
+  }
   function drawFood(S) {
     if (!(S.food > .002)) return;
     const u = G.food.u, e = S.food * S.food * (3 - 2 * S.food), z = -1.5 + e * 2.35, y = -.2 + Math.sin(S.t * 2.4) * .004 * e;
     gl.useProgram(G.food.p); gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uCam, EYE);
-    const part = (mesh, t, sc, col, met, rough) => { gl.uniformMatrix4fv(u.uM, false, TRS([t[0], t[1] + y, t[2] + z], sc)); gl.uniform3fv(u.uCol, col); gl.uniform1f(u.uMet, met); gl.uniform1f(u.uRough, rough); gl.bindVertexArray(mesh.vao); gl.drawElements(gl.TRIANGLES, mesh.n, gl.UNSIGNED_SHORT, 0); };
-    part(G.cube, [0, 0, 0], [.33, .018, .2], [.74, .76, .82], 1, .28);
-    part(G.cube, [0, .03, 0], [.3, .022, .17], [.62, .42, .22], 0, .8);   // paper boat
-    for (let i = 0; i < 6; i++) { const cx = (i % 3 - 1) * .18, cz = (i < 3 ? -.06 : .07); part(G.sphere, [cx, .12, cz], [.083, .08, .083], [.86, .52, .17], 0, .55); part(G.sphere, [cx, .19, cz], [.052, .014, .052], [.2, .08, .05], 0, .2); part(G.cube, [cx + .02, .21, cz + .01], [.012, .004, .012], [.4, .8, .2], 0, .6); }
+    const part = (mesh, t, sc, col, met, rough, ry = 0, rz = 0) => { gl.uniformMatrix4fv(u.uM, false, TRSR([t[0], t[1] + y, t[2] + z], sc, ry, rz)); gl.uniform3fv(u.uCol, col); gl.uniform1f(u.uMet, met); gl.uniform1f(u.uRough, rough); gl.bindVertexArray(mesh.vao); gl.drawElements(gl.TRIANGLES, mesh.n, gl.UNSIGNED_SHORT, 0); };
+    // low white paper tray (trapezoid), glossy red-orange sauce just below the rim
+    part(G.tray, [0, -.012, 0], [.36, .09, .22], [.93, .92, .9], 0, .85);
+    part(G.tray, [0, .045, 0], [.335, .038, .196], [.74, .16, .05], 0, .22);
+    const Pl = G.pile;
+    Pl.cakes.forEach(c => { const t = c.tone; part(G.cake, [c.x, c.y, c.z], [c.L, c.r, c.r], [.9 - t * .1, .54 - t * .13, .3 - t * .1], 0, .32, c.ry, c.rz); });
+    Pl.fish.forEach(f => part(G.cube, [f.x, f.y + .006, f.z], [.075, .006, .035], [.86, .64, .36], 0, .7, f.ry, f.rz));
+    Pl.blobs.forEach(b => part(G.sphere, [b.x, b.y, b.z], [b.s * 1.4, b.s * .45, b.s * 1.2], [.66, .1, .04], 0, .16));
+    Pl.bits.forEach(b => part(G.cube, [b.x, b.y, b.z], [.012, .003, .006], [.38, .78, .22], 0, .6, b.ry, 0));
     gl.bindVertexArray(null);
   }
 
@@ -405,6 +634,7 @@ void main(){
     return true;
   };
 
+  BR.setQ = function (q) { Q.q = q; };
   BR.resize = function (w, h, dpr) {
     if (!Q.ok) return;
     Q.dpr = dpr; canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
@@ -535,7 +765,7 @@ void main(){
     // 1 background
     let u = G.bg.u; gl.useProgram(G.bg.p);
     gl.uniform2f(u.uRes, W, H); gl.uniform1f(u.uT, S.t); gl.uniform1f(u.uScroll, S.scroll); gl.uniform2f(u.uMouse, mouse[0] * .5, mouse[1] * -.5);
-    gl.uniform1f(u.uPurple, S.purple); gl.uniform1f(u.uLime, S.lime); gl.uniform1f(u.uDark, S.dark); gl.uniform1f(u.uHBand, S.hband); gl.uniform1f(u.uHalo, S.halo || 0); gl.uniform1f(u.uSolid, S.solid || 0); gl.uniform1f(u.uBeam, S.beam || 0); gl.uniform1f(u.uWave, S.wave || 0);
+    gl.uniform1f(u.uPurple, S.purple); gl.uniform1f(u.uLime, S.lime); gl.uniform1f(u.uDark, S.dark); gl.uniform1f(u.uHBand, S.hband); gl.uniform1f(u.uHalo, S.halo || 0); gl.uniform1f(u.uSolid, S.solid || 0); gl.uniform1f(u.uBeam, S.beam || 0); gl.uniform1f(u.uWave, S.wave || 0); gl.uniform1f(u.uGate, S.gate || 0); gl.uniform1f(u.uGateA, S.gateA || 0); gl.uniform1f(u.uArc, S.arc || 0); gl.uniform1f(u.uTun, S.tun || 0); gl.uniform1f(u.uTz, S.tz || 0); gl.uniform1f(u.uHz, S.hz || 0); gl.uniform1f(u.uMcu, S.mcu || 0); gl.uniform1f(u.uMcuK, S.mcuK || 0); gl.uniform1f(u.uMcuH, S.mcuH || 0); gl.uniform1f(u.uQ, Q.q || 52); gl.uniform3f(u.uMcuP, S.mcuX || .5, S.mcuY || .5, S.mcuR || .3); gl.uniform1f(u.uPA, S.pA || 0); gl.uniform1f(u.uPX, S.pX || 0); gl.uniform1f(u.uPY, S.pY || 0); gl.uniform1f(u.uPW, S.pW || .07); gl.uniform1f(u.uPF, S.pF || 0); gl.uniform1f(u.uPH, S.pH || 0); gl.uniform1f(u.uPI, S.pI || 0); gl.uniform1f(u.uPS, S.pS || 0); gl.uniform1f(u.uPB, S.pB || 0); gl.uniform1f(u.uPHd, S.pHd == null ? 3 : S.pHd);
     gl.uniform1f(u.uFloorA, S.floor); gl.uniform1f(u.uWarpBg, S.warp); gl.uniform1f(u.uDoorA, S.doorA || 0); gl.uniform1f(u.uDoorZ, S.doorZ || 1);
     gl.uniform2f(u.uModel, S.vis > .05 ? mo.x * .5 + .5 : .5, S.vis > .05 ? mo.y * .5 + .5 : .5); gl.uniform2f(u.uFloor, fl.x * .5 + .5, fl.y * .5 + .5);
     gl.uniform3fv(u.uLed, S.ledT);

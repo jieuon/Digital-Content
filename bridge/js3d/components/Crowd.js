@@ -336,6 +336,18 @@ export class Crowd {
     this.links = null;
   }
 
+  setKeepOut(k) { this.keep = k; }
+  _constrain(p) {
+    const K = this.keep; if (!K || p.path !== 'alley') return;
+    const B = K.stallBand, ax = Math.abs(p.x);
+    if (p.z < B.z1 && p.z > B.z0 && ax > B.x0 && ax < B.x1) { p.x = Math.sign(p.x) * (ax < (B.x0 + B.x1) / 2 ? B.x0 : B.x1); p.homeX = p.x; }
+    for (const c of K.corridors) {
+      if (p.x > c.x0 && p.x < c.x1 && p.z > c.z0 && p.z < c.z1) {
+        if (c.axis === 'x') { p.x = c.x1; p.homeX = p.x; }
+        else { p.z = (p.z - c.z0 < c.z1 - p.z) ? c.z0 : c.z1; }
+      }
+    }
+  }
   update(dt, time, ctx) {
     dt = Math.min(dt, 0.05);
     const k = this.k, half = LAYOUT.alleyHalf;
@@ -391,7 +403,7 @@ export class Crowd {
       const a = 1 - Math.exp(-dt * 4.5);
       p.vx += (tvx - p.vx) * a; p.vz += (tvz - p.vz) * a;
       p.x += p.vx * dt; p.z += p.vz * dt;
-      if (p.path === 'alley') p.x = Math.max(-half + 0.45, Math.min(half - 0.45, p.x));
+      if (p.path === 'alley') { p.x = Math.max(-half + 0.45, Math.min(half - 0.45, p.x)); this._constrain(p); }
       const sp = Math.hypot(p.vx, p.vz);
       let ty = p.yaw;
       if (sp > 0.12) ty = Math.atan2(p.vx, p.vz);
@@ -423,7 +435,8 @@ export class Crowd {
       const breath = Math.sin(time * 1.6 + p.seed) * 0.012;
       k.root.position.set(p.x, 0, p.z);
       k.root.rotation.set(0, p.yaw, 0);
-      k.root.scale.set(p.h * p.w, p.h, p.h * p.w);
+      const nd = Math.hypot(p.x - cam.x, p.z - cam.z), fs = cam.y < 3.6 ? Math.min(1, Math.max(0.001, (nd - 0.9) / 1.1)) : 1;
+      k.root.scale.set(p.h * p.w * fs, p.h * fs, p.h * p.w * fs);
       k.pelvis.position.set(0.024 * g * s, 0.955 - 0.012 * g + 0.024 * g * Math.cos(2 * p.phase), 0);
       k.pelvis.rotation.set(0, 0.13 * g * s, 0.04 * g * c);
       k.torso.rotation.set(0.03 + 0.07 * g + breath, -0.22 * g * s, -0.035 * g * c);

@@ -22,7 +22,12 @@
 </div>
 
 <header class="hud">
-  <a class="brand" href="#act1" aria-label="BRIDGE — back to start"><img class="brand-sym" src="assets/img/logo-symbol.png" alt="" draggable="false">BRIDGE</a>
+  <div class="hud-l">
+    <a class="home" id="homeBtn" href="../index.html?return=street#explore" aria-label="2030 MYEONGDONG — back to the city (team site)">
+      <img class="home-logo" src="assets/img/logo-2030.png" alt="" draggable="false"><img class="home-sym" src="assets/img/logo-symbol.png" alt="" draggable="false"><span class="home-tip">BACK TO CITY</span>
+    </a>
+    <a class="brand" href="#act1" aria-label="BRIDGE — back to start"><img class="brand-sym" src="assets/img/logo-symbol.png" alt="" draggable="false">BRIDGE</a>
+  </div>
   <div class="hud-mid"><span id="hudAct">ACT 01</span><b id="hudName">INTRO</b></div>
   <a class="hud-link" href="#act6">SYSTEM ↓</a>
 </header>
@@ -37,14 +42,15 @@
 <!-- ================= ACT 01 · INTRO ================= -->
 <section class="act pinned" id="act1" data-scene="a1" data-ui="1" data-name="INTRO" style="--h:900">
   <div class="stage">
-    <h1 class="slam" id="kt1" data-text="BRIDGE" data-fit=".9" aria-label="BRIDGE">BRIDGE</h1>
+    <h1 class="slam brand-t" id="kt1" data-text="BRIDGE" data-fit=".9" aria-label="BRIDGE">BRIDGE</h1>
     <img class="intro-logo" id="introLogo" src="assets/img/logo-2030.png" alt="2030 MYEONGDONG" draggable="false">
-    <p class="sub1" id="sub1">SMART COMMUNICATION GATE</p>
+    <p class="sub1" id="sub1">SMART COMMUNICATION GATE<span class="ko">사람과 사람을 연결하는 스마트 소통 게이트</span></p>
     <div class="glass c-left" data-r="0.14,0.36" data-fx="up">
       <p class="eb">2030 · MYEONGDONG</p>
       <p class="words lg">두 사람, <b class="kw pu">두 개의 언어</b>,<br>하나의 <b class="kw">포장마차</b>.</p>
     </div>
     <p class="giant" data-r="0.38,0.56" data-fx="slam" data-fit=".86">ENTER<br>THE GATE.</p>
+    <p class="ko-sub ko-gate" data-r="0.42,0.56" data-fx="up">게이트를 지나, 대화가 시작되는 공간으로 들어갑니다.</p>
     <div class="re" data-r="0.8,1.04" data-fx="up">
       <p class="eb">SMART COMMUNICATION GATE</p>
       <p class="slogan words">TECHNOLOGY CONNECTS.<br><em>PEOPLE DECIDE.</em></p>
@@ -59,8 +65,9 @@
     <div class="a2-floor"></div>
     <p class="chap" data-r="0,0.12" data-fx="up"><b>SCENE 01</b> 명동의 포장마차, 마주 선 두 사람</p>
     <div class="figs" id="figs" data-r="-1,0.93" data-fx="none">
-      <figure class="fig tourist"><img src="assets/people/B_side.png" alt="3D mannequin silhouette of a foreign tourist" draggable="false"><figcaption>TOURIST</figcaption></figure>
-      <figure class="fig vendor"><img src="assets/people/A_side.png" alt="3D mannequin silhouette of a street-food vendor" draggable="false"><figcaption>VENDOR</figcaption></figure>
+      <figure class="fig tourist" id="figT"><img class="pose" data-p="1" src="assets/people/tourist_01.png" alt="Foreign tourist standing at the stall" draggable="false"><img class="pose" data-p="2" src="assets/people/tourist_02.png" alt="" draggable="false"><img class="pose" data-p="3" src="assets/people/tourist_03.png" alt="" draggable="false"><figcaption>TOURIST</figcaption></figure>
+      <figure class="fig table" aria-hidden="true"><img src="assets/people/table_01.png" alt="" draggable="false"></figure>
+      <figure class="fig vendor" id="figV"><img class="pose" data-p="1" src="assets/people/vendor_01.png" alt="Street-food vendor behind the stall" draggable="false"><img class="pose" data-p="2" src="assets/people/vendor_02.png" alt="" draggable="false"><img class="pose" data-p="3" src="assets/people/vendor_03.png" alt="" draggable="false"><figcaption>VENDOR</figcaption></figure>
     </div>
     <div class="bubble v v1" data-r="0.08,0.6" data-fx="pop"><i>VENDOR</i>몇 개 드릴까요?</div>
     <div class="bubble t t1" data-r="0.17,0.6" data-fx="pop"><i>TOURIST</i>…What is this?</div>
@@ -90,25 +97,26 @@
       <div class="shards" id="shards" aria-hidden="true"></div>
       <p class="eb">PROBLEM DEFINITION</p>
       <h2 class="kt-prob" id="kt2" data-text="WORDS ARE SPOKEN.|MEANING IS LOST." data-fit=".9" aria-label="Words are spoken. Meaning is lost.">WORDS ARE SPOKEN. MEANING IS LOST.</h2>
+      <p class="ko-sub">말은 오가지만, 의미는 전달되지 않습니다.</p>
     </div>
     <ol class="mini" id="mini" aria-hidden="true" data-r="0.22,0.8" data-fx="none"><li>01</li><li>02</li><li>03</li></ol>
-    <article class="pcase" data-r="0.24,0.42" data-fx="card2">
-      <span class="num">01</span><h3>LANGUAGE<br>BARRIER</h3><p class="words lg">같은 말을 하지 않는다.<br>단어가 달라서, <b class="kw">뜻이 건너가지 못한다</b>.</p>
-      <svg class="ico" viewBox="0 0 120 80" aria-hidden="true"><path d="M8 8h56v36H30l-14 14V44H8Z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M56 30h56v36H98l-14 14V66H56Z" fill="none" stroke="currentColor" stroke-width="3" opacity=".6"/><path d="M44 54 76 22" stroke="var(--li)" stroke-width="4" stroke-linecap="round"/></svg>
+    <article class="pcase" data-fx="none">
+      <span class="num" aria-label="01"><i>0</i><i>1</i></span><h3>LANGUAGE<br>BARRIER</h3><p class="kow">같은 말을 하지 않는다.<br>단어가 달라서, <b class="kw">뜻이 건너가지 못한다</b>.</p>
+      <div class="gx g1" aria-hidden="true"><i class="orb o1"><em>A</em></i><i class="orb o2"><em>가</em></i><i class="prism"></i></div>
     </article>
-    <article class="pcase" data-r="0.44,0.62" data-fx="card2">
-      <span class="num">02</span><h3>CONTEXT<br>GAP</h3><p class="words lg">같은 상황을 읽지 않는다.<br>맵기, 수량, 옵션 — <b class="kw">맥락이 어긋난다</b>.</p>
-      <svg class="ico" viewBox="0 0 120 80" aria-hidden="true"><rect x="8" y="14" width="40" height="52" fill="none" stroke="currentColor" stroke-width="3"/><rect x="72" y="14" width="40" height="52" fill="none" stroke="currentColor" stroke-width="3" opacity=".6"/><path d="M52 40h16" stroke="var(--li)" stroke-width="4" stroke-dasharray="3 6" stroke-linecap="round"/></svg>
+    <article class="pcase" data-fx="none">
+      <span class="num" aria-label="02"><i>0</i><i>2</i></span><h3>CONTEXT<br>GAP</h3><p class="kow">같은 상황을 읽지 않는다.<br>맵기, 수량, 옵션 — <b class="kw">맥락이 어긋난다</b>.</p>
+      <div class="gx g2" aria-hidden="true"><i class="pane p1"><b></b><b></b><b></b></i><i class="pane p2"><b></b><b></b><b></b></i></div>
     </article>
-    <article class="pcase" data-r="0.64,0.8" data-fx="card2">
-      <span class="num">03</span><h3>BROKEN<br>INTERACTION</h3><p class="words lg"><b class="kw">대화가 끊어진다</b>.<br>서로를 보지 못한 채, 주문은 멈춘다.</p>
-      <svg class="ico" viewBox="0 0 120 80" aria-hidden="true"><circle cx="24" cy="40" r="14" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="96" cy="40" r="14" fill="none" stroke="currentColor" stroke-width="3" opacity=".6"/><path d="M40 40h14M66 40h14" stroke="var(--li)" stroke-width="4" stroke-linecap="round"/><path d="m56 30 8 20" stroke="var(--li)" stroke-width="4" stroke-linecap="round"/></svg>
+    <article class="pcase" data-fx="none">
+      <span class="num" aria-label="03"><i>0</i><i>3</i></span><h3>BROKEN<br>INTERACTION</h3><p class="kow"><b class="kw">대화가 끊어진다</b>.<br>서로를 보지 못한 채, 주문은 멈춘다.</p>
+      <div class="gx g3" aria-hidden="true"><i class="sph s1"></i><i class="sph s2"></i><i class="lk l1"></i><i class="lk l2"></i><i class="shd d1"></i><i class="shd d2"></i><i class="shd d3"></i></div>
     </article>
     <div class="insight" data-r="0.83,1.05" data-fx="none">
       <div class="rv" id="insRv"><img class="dim" src="assets/img/render-3.webp" alt="" aria-hidden="true"><img class="lit" src="assets/img/render-3.webp" alt="" aria-hidden="true"><div class="rv-ring"></div></div>
       <div class="insight-in">
         <p class="eb">INSIGHT</p>
-        <h2 class="hd xl" data-fx="slam">EYE<br>CONTACT</h2>
+        <h2 class="hd xl brand-t" data-fx="slam">EYE<br>CONTACT</h2>
         <p class="words lg">번역보다 먼저, 두 사람이 <b class="kw">서로를 마주 보는 일</b>.<br>기술은 그 사이를 이어줄 뿐 — <b class="kw pu">결정은 사람</b>이 합니다.</p>
       </div>
     </div>
@@ -121,6 +129,7 @@
     <div class="v-copy">
       <p class="eb">360° VIEWER</p>
       <h2 class="hd md">FIVE POINTS<br>OF CONTACT</h2>
+      <p class="ko-sub">사람과 사람이 만나는 다섯 개의 접점</p>
       <ol class="vlist" id="vlist"></ol>
       <div class="chips" role="group" aria-label="View controls">
         <button class="chip on" data-view="0">FRONT</button><button class="chip" data-view="180">BACK</button><button class="chip" id="autoRot" aria-pressed="false">AUTO ROTATE</button><button class="chip" id="vReset">RESET VIEW</button>
@@ -144,6 +153,7 @@
     <div class="sim-head">
       <p class="eb">ACT 04 — PUI SIMULATOR</p>
       <h2 class="hd md">SILENT.<br>CONNECTING.<br>READY.</h2>
+      <p class="ko-sub">조용히 대기하고, 연결하고, 준비를 알립니다.</p>
     </div>
     <div class="sim-bar">
       <div class="sim-desc glass" aria-live="polite"><p class="eb" id="simK">STATE 01</p><p id="simT"></p><ul id="simL"></ul></div>
@@ -177,27 +187,44 @@
   </div>
 </section>
 
-<!-- ================= ACT 06 · SYSTEM ================= -->
-<section class="act pinned" id="act6" data-scene="a6" data-ui="6" data-name="SYSTEM" style="--h:1800">
-  <div class="stage">
-    <ol class="pipe" id="pipe" data-r="0.1,0.8" data-fx="none" aria-label="INPUT to MCU AI to RESPONSE">
-      <li><i>01</i>INPUT</li><li class="ar" aria-hidden="true">→</li><li><i>02</i>MCU AI</li><li class="ar" aria-hidden="true">→</li><li><i>03</i>RESPONSE</li>
-    </ol>
-    <div class="slide intro6" data-r="-0.1,0.1" data-fx="none">
-      <p class="eb">ACT 06 — SYSTEM</p>
-      <h2 class="hd xl" data-fx="slam">HOW<br>BRIDGE<br>THINKS</h2>
-      <p class="words lg">사람의 행동이 <b class="kw">들어오고</b>, 의도를 <b class="kw pu">읽고</b>,<br>가장 알맞은 방식으로 <b class="kw">돌려줍니다</b>.</p>
-    </div>
-    <div class="slide sys" data-r="0.1,0.84" data-fx="none">
-      <div class="sys-cap"><p class="eb" id="sysK">01 · INPUT</p><h2 id="sysT">사람의 행동이 들어오는 곳</h2><p id="sysD">버튼, 카메라, 마이크, 그리고 두 사람의 목소리.</p></div>
-      <div class="sysmap" id="sysmap">
-        <svg class="sys-lines" id="sysLines" aria-hidden="true"></svg>
-        <div class="sys-col in"><div class="nd" data-r="0.12,0.84" data-fx="snapL"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="24" r="6" fill="currentColor"/></svg><b>PHYSICAL BUTTON</b><span>사람이 직접 누르는 단 하나의 조작</span></div><div class="nd" data-r="0.16,0.84" data-fx="snapL"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="16" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="24" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="27" cy="21" r="1.8" fill="currentColor"/></svg><b>CAMERA</b><span>다가옴과 마주 봄을 읽는 눈</span></div><div class="nd" data-r="0.20,0.84" data-fx="snapL"><svg viewBox="0 0 48 48"><rect x="18" y="6" width="12" height="22" rx="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M10 24a14 14 0 0 0 28 0M24 38v6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><b>MICROPHONE</b><span>거리의 소음 속 목소리</span></div><div class="nd" data-r="0.24,0.84" data-fx="snapL"><svg viewBox="0 0 48 48"><path d="M6 24h4M14 16v16M22 8v32M30 14v20M38 19v10M44 24h-2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><b>USER SPEECH</b><span>상인과 관광객, 각자의 말</span></div></div>
-        <div class="mcu" id="mcu" data-r="0.30,0.84" data-fx="pop"><b>MCU AI<small>AI는 돕고, 결정은 사람이</small></b><div class="mod" data-r="0.36,0.84" data-fx="snapL"><em>A</em><b>CONTEXT AWARENESS</b><span>지금 어떤 상황인지 이해</span></div><div class="mod" data-r="0.41,0.84" data-fx="snapR"><em>B</em><b>LANGUAGE MEDIATION</b><span>두 언어 사이를 중재</span></div><div class="mod" data-r="0.46,0.84" data-fx="snapL"><em>C</em><b>ADAPTIVE RESPONSE</b><span>상황에 맞춰 알맞게 응답</span></div><div class="mod" data-r="0.51,0.84" data-fx="snapR"><em>D</em><b>REAL-TIME CONNECTION</b><span>지연 없이 이어주기</span></div><div class="mod hl" data-r="0.56,0.84" data-fx="snapL"><em>E</em><b>HUMAN CONTROL</b><span>마지막 결정은 사람이</span></div></div>
-        <div class="sys-col out"><div class="nd" data-r="0.67,0.84" data-fx="snapR"><svg viewBox="0 0 48 48"><rect x="4" y="12" width="40" height="24" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 24h12M12 29h20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><b>DISPLAY</b><span>번역 · 요청 · 완료 정보를 양면에</span></div><div class="nd" data-r="0.71,0.84" data-fx="snapR"><svg viewBox="0 0 48 48"><path d="M8 20h8l10-8v24l-10-8H8Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M33 17a10 10 0 0 1 0 14M38 12a17 17 0 0 1 0 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><b>SPEAKER</b><span>알맞은 언어의 소리로</span></div><div class="nd" data-r="0.75,0.84" data-fx="snapR"><svg viewBox="0 0 48 48"><path d="M6 14h36" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><rect x="6" y="20" width="36" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="3"/></svg><b>TOP STATUS LIGHT</b><span>흰색 · 보라 · 라임, 말 없는 상태 표시</span></div></div>
+<!-- ================= ACT 06 · SYSTEM (one screen: INPUT → MCU AI → RESPONSE) ================= -->
+<section class="act pinned" id="act6" data-scene="a6" data-ui="6" data-name="SYSTEM" style="--h:560">
+  <div class="stage s6">
+    <header class="s6-top" data-r="0,1.05" data-fx="none">
+      <p class="eb">ACT 06 — SYSTEM · HOW BRIDGE THINKS</p>
+      <h2 class="s6-h">AI는 돕고, <span>결정은 사람이.</span></h2>
+    </header>
+    <div class="s6-map" id="sysmap" data-ph="0">
+      <svg class="sys-lines" id="sysLines" aria-hidden="true"></svg>
+      <div class="s6-col in">
+        <p class="s6-lab" id="labIn"><i>01</i>INPUT<em>입력</em></p>
+        <div class="nd" data-r="0.08,1.05" data-fx="snapL"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="24" cy="24" r="6" fill="currentColor"/></svg><b>BUTTON<em>버튼</em></b><span>사람이 직접 누르는 조작</span></div>
+        <div class="nd" data-r="0.14,1.05" data-fx="snapL"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="24" cy="24" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="24" cy="24" r="2" fill="currentColor"/></svg><b>CAMERA<em>카메라</em></b><span>마주 보는 두 사람을 읽는 눈</span></div>
+        <div class="nd" data-r="0.20,1.05" data-fx="snapL"><svg viewBox="0 0 48 48"><rect x="18" y="6" width="12" height="22" rx="6" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M11 22a13 13 0 0 0 26 0M24 35v7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><b>VOICE<em>음성</em></b><span>상인과 관광객의 말</span></div>
+      </div>
+      <div class="s6-core" id="mcu">
+        <p class="s6-lab c" id="labMcu"><i>02</i>MCU AI<em>두뇌</em></p>
+        <div class="ring" id="ring"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="r1" cx="100" cy="100" r="96"/><circle class="r2" cx="100" cy="100" r="86"/><circle class="pn" cx="100.0" cy="4.0" r="3.2"/><circle class="pn" cx="183.1" cy="52.0" r="3.2"/><circle class="pn" cx="183.1" cy="148.0" r="3.2"/><circle class="pn" cx="100.0" cy="196.0" r="3.2"/><circle class="pn" cx="16.9" cy="148.0" r="3.2"/></svg></div>
+        <p class="s6-one" id="s6one" aria-live="polite"><b></b><em></em></p>
+      </div>
+      <div class="s6-col out">
+        <p class="s6-lab" id="labOut"><i>03</i>RESPONSE<em>응답</em></p>
+        <div class="nd" data-r="0.66,1.05" data-fx="snapR"><svg viewBox="0 0 48 48"><rect x="5" y="11" width="38" height="24" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 22h12M12 28h20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><b>DISPLAY<em>디스플레이</em></b><span>번역 · 요청 · 완료 정보를 양면에</span></div>
+        <div class="nd" data-r="0.71,1.05" data-fx="snapR"><svg viewBox="0 0 48 48"><path d="M8 19h8l10-8v26l-10-8H8z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M33 17a10 10 0 0 1 0 14M38 12a17 17 0 0 1 0 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><b>SPEAKER<em>스피커</em></b><span>알맞은 언어의 소리</span></div>
+        <div class="nd" data-r="0.76,1.05" data-fx="snapR"><svg viewBox="0 0 48 48"><path d="M5 20h38" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M10 28h28M16 35h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".45"/></svg><b>STATUS LIGHT<em>상태조명</em></b><span>상단 조명으로 상태 안내</span></div>
       </div>
     </div>
-    <div class="slide anat" data-r="0.84,1.05" data-fx="none">
+    <footer class="s6-foot" id="s6foot" data-r="0.84,1.05" data-fx="up">
+      <p class="s6-tc">TECHNOLOGY CONNECTS.<br><b>PEOPLE DECIDE.</b></p>
+      <p class="s6-ko">기술은 연결하고, 사람은 결정합니다.</p>
+    </footer>
+  </div>
+</section>
+
+<!-- ================= ACT 06 · structure (five interaction points) ================= -->
+<section class="act pinned" id="act6a" data-scene="a6b" data-ui="6" data-name="SYSTEM" style="--h:260">
+  <div class="stage">
+    <div class="slide anat">
       <div class="a-l">
         <p class="eb">STRUCTURE</p>
         <h2 class="hd md2">FIVE<br>INTERACTION<br>POINTS</h2>
@@ -209,11 +236,12 @@
 </section>
 
 <!-- ================= ACT 06 · materials ================= -->
-<section class="act pinned" id="act6b" data-scene="a6b" data-ui="6" data-name="SYSTEM" style="--h:300">
+<section class="act pinned" id="act6b" data-scene="a6b" data-ui="6" data-name="SYSTEM" style="--h:150">
   <div class="stage">
     <div class="slide spec">
       <div class="sp-l">
         <p class="eb">MATERIAL · FINISH · SIZE</p><h2 class="hd md2">BUILT TO<br>BE QUIET.</h2>
+        <p class="ko-sub">조용히 곁에 머무르도록 만들었습니다.</p>
         <dl class="dims"><div><dt>SIZE</dt><dd>600 × 500 mm</dd></div><div><dt>THICKNESS</dt><dd>60 mm</dd></div><div><dt>FORM</dt><dd>Horizontal top frame · slanted legs · open center</dd></div></dl>
         <p class="note">치수는 디자이너 제공 값입니다.</p>
       </div>
@@ -231,16 +259,19 @@
     <video id="outVid" class="outvid" muted playsinline preload="none" poster="assets/video/myeongdong-zoomout-poster.webp"><source src="assets/video/myeongdong-zoomout.mp4" type="video/mp4"></video>
     <div class="outshade" id="outShade"></div>
     <p class="giant" data-r="0.07,0.3" data-fx="slam" data-fit=".86">STEP BACK<br>THROUGH.</p>
+    <p class="ko-sub ko-step" data-r="0.1,0.3" data-fx="up">게이트를 지나, 명동 전체로 한 걸음 물러섭니다.</p>
     <div class="finale" aria-label="Technology connects. People decide.">
-      <p class="fin" data-r="0.36,0.66" data-fx="slam" data-fit=".92">TECHNOLOGY</p>
-      <p class="fin f2" data-r="0.44,0.66" data-fx="slam" data-fit=".92">CONNECTS.</p>
+      <p class="fin brand-t" data-r="0.36,0.66" data-fx="slam" data-fit=".92">TECHNOLOGY</p>
+      <p class="fin f2 brand-t" data-r="0.44,0.66" data-fx="slam" data-fit=".92">CONNECTS.</p>
       <p class="fin lime" data-r="0.66,0.91" data-fx="slam" data-fit=".92">PEOPLE</p>
       <p class="fin f2 lime" data-r="0.72,0.91" data-fx="slam" data-fit=".92">DECIDE.</p>
+      <p class="ko-sub ko-fin" data-r="0.78,0.91" data-fx="up">기술은 연결하고, 사람은 결정합니다.</p>
     </div>
     <div class="endcard" id="endcard" data-r="0.91,1.12" data-fx="up">
       <p class="eb">FACE TO FACE, CONNECTED.</p>
-      <p class="end-b" data-fit=".8">BRIDGE</p>
-      <a class="end-link" id="teamLink" href="../index.html?return=street#explore"><img class="end-logo" src="assets/img/logo-2030.png" alt="2030 MYEONGDONG" draggable="false"><b>ONE CITY. DIFFERENT JOURNEYS.</b><em>BACK TO MYEONGDONG MAP ↗</em></a>
+      <p class="ko-sub ko-end">마주 보는 순간, 서로 연결됩니다.</p>
+      <p class="end-b brand-t" data-fit=".8">BRIDGE</p>
+      <a class="end-link" id="teamLink" href="../index.html?return=street#explore"><img class="end-logo" src="assets/img/logo-2030.png" alt="2030 MYEONGDONG" draggable="false"><b>ONE CITY. DIFFERENT JOURNEYS.</b><em>BACK TO MYEONGDONG ↗</em></a>
       <button class="chip big" id="restart">↺ RESTART EXPERIENCE</button>
     </div>
   </div>
@@ -344,7 +375,7 @@ const QUALITY = (() => {
   return {
     mobile,
     dpr: Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.6),
-    people: mobile ? 46 : 110,
+    people: mobile ? 26 : 52,
     reflector: !mobile,
     bloom: true,
     shadows: !mobile,
@@ -716,7 +747,7 @@ const SIGN_STYLES = [
 ];
 const SHOP_WORDS = ['화장품', '스킨케어 라운지', '마스크팩 전문점', '명동 뷰티', '환전소', '약국', '안경', '기념품', '카페 2030', '편의점', '한방 화장품', '네일 살롱', '신발', 'K-POP 굿즈', '면세 화장품', '향수 공방', '포토 스튜디오', '디저트 하우스', '라멘', '치킨 & 맥주', '선크림 전문', '헤어 살롱', '모자 · 잡화', '전통 차'];
 const BLADE_WORDS = ['화장품', '뷰티', '환전', '카페', '호텔', '약국', '노래방', '한식당', '안경', '기념품', '네일', '스파', '피부과', '분식', '게스트하우스', '마사지'];
-const STALL_MENU = [['떡볶이', '4,000원'], ['닭꼬치', '5,000원'], ['호떡', '2,000원'], ['어묵', '3,000원'], ['회오리감자', '5,000원'], ['계란빵', '2,500원'], ['붕어빵', '3개 2,000원'], ['탕후루', '4,000원'], ['군만두', '5,000원'], ['랍스터구이', '15,000원']];
+const STALL_MENU = [['떡볶이', '4,000원'], ['닭꼬치', '5,000원'], ['호떡', '2,000원'], ['어묵', '3,000원'], ['회오리감자', '5,000원'], ['계란빵', '2,500원'], ['붕어빵', '3개 2,000원'], ['탕후루', '4,000원'], ['군만두', '5,000원']];
 
 // ---------------------------------------------------------------- ground paving
 function makePaving() {
@@ -1127,6 +1158,18 @@ class Crowd {
     this.links = null;
   }
 
+  setKeepOut(k) { this.keep = k; }
+  _constrain(p) {
+    const K = this.keep; if (!K || p.path !== 'alley') return;
+    const B = K.stallBand, ax = Math.abs(p.x);
+    if (p.z < B.z1 && p.z > B.z0 && ax > B.x0 && ax < B.x1) { p.x = Math.sign(p.x) * (ax < (B.x0 + B.x1) / 2 ? B.x0 : B.x1); p.homeX = p.x; }
+    for (const c of K.corridors) {
+      if (p.x > c.x0 && p.x < c.x1 && p.z > c.z0 && p.z < c.z1) {
+        if (c.axis === 'x') { p.x = c.x1; p.homeX = p.x; }
+        else { p.z = (p.z - c.z0 < c.z1 - p.z) ? c.z0 : c.z1; }
+      }
+    }
+  }
   update(dt, time, ctx) {
     dt = Math.min(dt, 0.05);
     const k = this.k, half = LAYOUT.alleyHalf;
@@ -1182,7 +1225,7 @@ class Crowd {
       const a = 1 - Math.exp(-dt * 4.5);
       p.vx += (tvx - p.vx) * a; p.vz += (tvz - p.vz) * a;
       p.x += p.vx * dt; p.z += p.vz * dt;
-      if (p.path === 'alley') p.x = Math.max(-half + 0.45, Math.min(half - 0.45, p.x));
+      if (p.path === 'alley') { p.x = Math.max(-half + 0.45, Math.min(half - 0.45, p.x)); this._constrain(p); }
       const sp = Math.hypot(p.vx, p.vz);
       let ty = p.yaw;
       if (sp > 0.12) ty = Math.atan2(p.vx, p.vz);
@@ -1214,7 +1257,8 @@ class Crowd {
       const breath = Math.sin(time * 1.6 + p.seed) * 0.012;
       k.root.position.set(p.x, 0, p.z);
       k.root.rotation.set(0, p.yaw, 0);
-      k.root.scale.set(p.h * p.w, p.h, p.h * p.w);
+      const nd = Math.hypot(p.x - cam.x, p.z - cam.z), fs = cam.y < 3.6 ? Math.min(1, Math.max(0.001, (nd - 0.9) / 1.1)) : 1;
+      k.root.scale.set(p.h * p.w * fs, p.h * fs, p.h * p.w * fs);
       k.pelvis.position.set(0.024 * g * s, 0.955 - 0.012 * g + 0.024 * g * Math.cos(2 * p.phase), 0);
       k.pelvis.rotation.set(0, 0.13 * g * s, 0.04 * g * c);
       k.torso.rotation.set(0.03 + 0.07 * g + breath, -0.22 * g * s, -0.035 * g * c);
@@ -1299,6 +1343,15 @@ class CityLite {
     this._lights();
     this._screens();
     this.crowd = new Crowd(scene, QUALITY.people);
+    // crowd rules: no walking through the stall row, and an open view corridor in front of / behind the main stall
+    const a = this.anchor;
+    this.crowd.setKeepOut({
+      stallBand: { x0: 4.3, x1: 6.55, z0: -56.5, z1: -4.6 },
+      corridors: [
+        { x0: a.x + 1.1, x1: a.x + 6.6, z0: a.z - 3.8, z1: a.z + 12.5, axis: 'x', to: 1 },       // street side of the main stall (camera approach)
+        { x0: a.x - 3.2, x1: a.x - 0.8, z0: a.z - 3.6, z1: a.z + 3.6, axis: 'z' }                 // behind the stall (stage 05 view)
+      ]
+    });
   }
 
   // dark environment with a few neon panels → believable reflections on metal/paint
@@ -1530,6 +1583,18 @@ class CityLite {
     };
     B.build(materials, this.scene, { cast: false, receive: true });
     this.lampPos = lampPos;
+    if (this.heroSign) {
+      const c = document.createElement('canvas'); c.width = 1024; c.height = 300; const g = c.getContext('2d');
+      g.fillStyle = '#17121f'; g.fillRect(0, 0, 1024, 300);
+      g.strokeStyle = 'rgba(164,124,255,0.9)'; g.lineWidth = 6; g.strokeRect(8, 8, 1008, 284);
+      g.fillStyle = '#f2eefb'; g.textBaseline = 'middle';
+      g.font = '800 150px Pretendard, Noto Sans KR, Arial, sans-serif'; g.textAlign = 'left'; g.fillText('떡볶이', 52, 150);
+      g.font = '600 64px Pretendard, Arial, sans-serif'; g.fillStyle = '#c5ff35'; g.textAlign = 'right'; g.fillText('TTEOKBOKKI', 976, 118);
+      g.font = '500 44px Pretendard, Arial, sans-serif'; g.fillStyle = '#b9b3d0'; g.fillText('₩4,000', 976, 196);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.4), new THREE.MeshBasicMaterial({ map: t, color: new THREE.Color(0.8, 0.78, 0.86), toneMapped: false }));
+      m.applyMatrix4(this.heroSign.M); this.scene.add(m); this.heroSignMesh = m;
+    }
   }
 
   _stall(B, x, z, side, atlas, hero = false) {
@@ -1559,9 +1624,17 @@ class CityLite {
     B.add('stall', new THREE.CylinderGeometry(0.22, 0.24, 0.12, 16), L(W / 2 - 0.45, 1.11, 0), 0x2a2a2e);
     if (!hero) for (let k = 0; k < 6; k++) B.add('stall', new THREE.CylinderGeometry(0.008, 0.008, 0.4, 4), L(-0.4 + k * 0.08, 1.2, 0.3, 0.3), 0xc9a26b);
     // menu board + bulbs
-    const [t, p] = STALL_MENU[(R() * STALL_MENU.length) | 0];
-    const r = atlas.menu(t, p, { bg: '#f7f2e6', fg: '#b4262f' });
-    B.add('signs', atlasPlane(1.1, 0.55, r), L(0, 1.85, D / 2 + 0.32), 0xffffff);
+    const rIdx = (R() * STALL_MENU.length) | 0;
+    if (hero) {
+      // main stall: a slim TTEOKBOKKI lightbox on top of the roof frame — never in front of the vendor or the gate
+      B.add('metal', new THREE.BoxGeometry(1.56, 0.46, 0.07), L(0, 2.74, D / 2 + 0.2), 0x0d0d10);
+      this.heroSign = { M: L(0, 2.74, D / 2 + 0.2 + 0.042) };
+    } else {
+      const nbr = STALL_MENU.filter(m => m[0] !== '떡볶이');
+      const [t, p] = nbr[(this.stallPos.length * 7 + rIdx) % nbr.length];
+      const r = atlas.menu(t, p, { bg: '#f7f2e6', fg: '#b4262f' });
+      B.add('signs', atlasPlane(0.8, 0.4, r), L(0, 2.55, D / 2 + 0.45), 0xffffff);
+    }
     for (let k = 0; k < 4; k++) B.add('bulb', new THREE.SphereGeometry(0.055, 8, 6), L(-W / 2 + 0.3 + k * (W - 0.6) / 3, 2.1, 0.3), 0xffffff);
     this.stallLights = this.stallLights || [];
     this.stallLights.push(new THREE.Vector3(0, 2.0, 0.4).applyMatrix4(M));
@@ -1743,15 +1816,15 @@ const CAM = [
   [0.25, [-0.7, 1.62, 2.4], [0, 1.3, -0.05]],
   [0.31, [0.0, 1.6, 1.8], [0, 1.2, -0.1]],
   [0.345, [0.0, 1.64, 1.95], [0, 1.5, -0.85]],
-  [0.39, [0.62, 1.72, 2.45], [0, 1.45, -0.6]],
-  [0.51, [0.8, 1.68, 2.2], [0, 1.42, -0.7]],
+  [0.39, [0.9, 1.72, 2.5], [0.02, 1.45, -0.6]],
+  [0.51, [1.05, 1.66, 2.25], [0.05, 1.42, -0.7]],
   [0.54, [0.18, 1.44, 1.05], [0, 1.34, -0.1]],
   [0.60, [0.14, 1.42, 0.95], [0, 1.31, -0.1]],
   [0.645, [-2.5, 1.5, 0.5], [0, 1.45, 0.0]],
   [0.70, [-2.3, 1.5, 0.4], [0, 1.45, 0.0]],
-  [0.74, [-0.95, 1.32, 1.05], [0, 1.2, -0.05]],
-  [0.80, [0.7, 1.7, -2.0], [0, 1.35, 0.5]],
-  [0.86, [0.75, 1.7, -2.05], [0, 1.35, 0.5]],
+  [0.74, [1.6, 1.38, 1.5], [0, 1.2, 0.0]],
+  [0.80, [2.5, 1.42, 0.3], [0, 1.22, 0.15]],
+  [0.86, [2.5, 1.42, 0.35], [0, 1.22, 0.2]],
   [0.90, [1.0, 1.66, 2.7], [0, 1.45, -0.1]],
   [0.96, [3.0, 2.0, 6.4], [0, 1.4, 0]],
   [1.00, [4.4, 2.7, 9.2], [0, 1.6, -1.0]]
