@@ -278,12 +278,15 @@ void main(){
   vec2 uv=gl_FragCoord.xy/uRes;float asp=uRes.x/uRes.y;
   vec2 p=(uv-.5)*vec2(asp,1.)*1.5;p.y+=uScroll*.4;p+=uMouse*.05;
   float t=uT*(.05+uWarpBg*.04);
+  float n=h21(gl_FragCoord.xy+fract(uT*7.)*113.);
+  vec3 base=vec3(.067,.071,.086),graph=vec3(.188,.192,.216),pur=vec3(.463,.157,.961),lime=vec3(.773,1.,.208);
+  vec2 d=(uv-uModel)*vec2(asp,1.);float rr=length(d);
+  vec3 col=base*1.05+pur*.02*exp(-rr*rr*2.);
+  if(uSolid<.9999){   // [V6] fully flat-dark scenes skip the 6 fbm passes below (their result was discarded by the mix at the end of this block)
   vec2 q=vec2(fbm(p+vec2(0.,t)),fbm(p+vec2(5.2,1.3)-t));
   vec2 r=vec2(fbm(p+3.*q+vec2(1.7,9.2)+t*.8),fbm(p+3.*q+vec2(8.3,2.8)-t*.7));
   float f=fbm(p+3.*r);
-  float n=h21(gl_FragCoord.xy+fract(uT*7.)*113.);
-  vec3 base=vec3(.067,.071,.086),graph=vec3(.188,.192,.216),pur=vec3(.463,.157,.961),lime=vec3(.773,1.,.208);
-  vec3 col=base;
+  col=base;
   col=mix(col,graph,smoothstep(.3,.75,r.x)*.3);
   float m=smoothstep(.42,.86,f+(n-.5)*.12);
   float edge=smoothstep(.3,.6,f)*(1.-smoothstep(.6,.9,f));
@@ -292,7 +295,6 @@ void main(){
   float l=smoothstep(.66,.9,fbm(p*1.15+q*2.+vec2(3.,t*2.))+(n-.5)*.16);
   col+=lime*l*.1*uLime*smoothstep(-.1,.9,uv.x*.5+(1.-uv.y)*.7);
   float md=length((uv-uMouse*.5-.5)*vec2(asp,1.));col+=pur*exp(-md*md*7.)*.1;
-  vec2 d=(uv-uModel)*vec2(asp,1.);float rr=length(d);
   col+=uLed*exp(-rr*rr*2.4)*.05;
   vec2 fd=(uv-uFloor)*vec2(asp,1.)*vec2(.8,3.4);col+=uLed*exp(-dot(fd,fd)*8.)*.14*uFloorA;
   float hb=exp(-pow((uv.y-.47-.04*sin(uT*.3))/.03,2.))*(1.-smoothstep(.25,.75,abs(uv.x-.5)));
@@ -300,6 +302,7 @@ void main(){
   // product halo (soft light pool behind the object) + flat dark mode for quiet sections
   col+=mix(vec3(.50,.46,.72),uLed,.35)*exp(-rr*rr*3.2)*uHalo*.20;
   col=mix(col,base*1.05+pur*.02*exp(-rr*rr*2.),uSolid);
+  }
   if(uBeam>.001){
     // studio rig: soft key cone from above, haze in the beam, light pool on the floor, quiet cyclorama behind
     float asp2=asp;float topY=1.18;float span=max(.2,topY-uFloor.y);

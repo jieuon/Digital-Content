@@ -174,6 +174,13 @@ class ScenarioLayer {
     loadGate().then(g => {
       this.gate = g; g.holder.position.set(0, 1.05, -0.1); this.H.add(g.holder);
       this.display = makeDisplay(g); this.display.set({ key: 'off' }); this.ready = true; view.classList.add('on3d');
+      // [V7] pre-warm: compile every shader variant (async where the browser supports it) and draw one hidden frame while the page is idle,
+      //      so the first time ACT05 scrolls into view there is no compile / first-draw stall. Visuals are unchanged; the frame goes to the off-screen canvas.
+      const warm = async () => {
+        try { if (this.renderer.compileAsync) await this.renderer.compileAsync(this.city.scene, this.camera); else this.renderer.compile(this.city.scene, this.camera); } catch (e) { }
+        try { this.composer.render(0.016); } catch (e) { }
+      };
+      (window.requestIdleCallback ? (f => requestIdleCallback(f, { timeout: 2500 })) : (f => setTimeout(f, 1200)))(warm);
     });
   }
   resize() {

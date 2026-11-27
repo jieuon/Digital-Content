@@ -124,6 +124,27 @@ body.cinemaLocked #app,body.cinemaLocked main{visibility:hidden!important}
 .pc-dots i.on{width:26px;border-radius:999px;background:var(--lime)}
 .pc-hint{text-align:center;margin-top:14px;font-size:10px;letter-spacing:.18em;color:#9993a9}
 @media(max-width:700px){.pc-card{width:28.5vw;border-radius:16px}.pc-info{padding:2px 9px 11px;gap:4px}.pc-info b{font-size:12.5px}.pc-info .mono{font-size:7.5px;letter-spacing:.08em}.pc-info small{font-size:8px}.pc-stage{height:clamp(300px,52vh,460px)}}
+/* ===== [PERF] product cards: focus drawn with cached layers driven by ONE custom property (--f, 0→1) =====
+   · sharp image + a pre-blurred/desaturated copy (made once on a canvas) cross-fade with opacity
+   · the purple glow / deeper drop shadow are fixed layers whose opacity follows --f (no per-frame box-shadow strings)
+   · brightness(.8) is the dark shade layer (same maths), the focus edge is a fixed 1px ring layer
+   · layers are promoted (will-change) only while the section is on screen (.pc-live) */
+.pc-card{--f:0;--tb:2.2px;overflow:visible;box-shadow:none!important;filter:none!important;transition:none!important;border-color:rgba(157,92,255,.35)!important;will-change:auto}
+.pc-in{position:absolute;inset:0;border-radius:inherit;overflow:hidden;display:flex;flex-direction:column;background:#0b0912}
+.pc-card::before,.pc-card::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;z-index:-1}
+.pc-card::before{box-shadow:0 30px 70px rgba(0,0,0,.6);opacity:calc(1 - var(--f))}
+.pc-card::after{box-shadow:0 50px 100px rgba(0,0,0,.6),0 0 60px rgba(118,40,245,.5);opacity:var(--f)}
+.pc-edge{position:absolute;inset:-1px;border-radius:inherit;border:1px solid rgba(190,140,255,.85);pointer-events:none;opacity:var(--f);z-index:3}
+.pc-blur{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:calc(1 - var(--f));display:block}
+.pc-shade{opacity:calc(1 - (.8 + .2*var(--f))*(1 - .1*(1 - var(--f))))}
+.pc-glow{opacity:calc(var(--f)*var(--f))}
+.pc-card:not(.blur-ready) .pc-img img{filter:blur(calc((1 - var(--f))*var(--tb))) saturate(calc(.88 + .12*var(--f)))}   /* only until the blurred copy exists */
+.pc-card.soft{border-color:rgba(157,92,255,.2)!important}   /* the live blur used to soften the 1px border too */
+.pc-card.soft .pc-info .mono{color:transparent;text-shadow:0 0 var(--tbf,0px) var(--purple-hi)}
+.pc-card.soft .pc-info b{color:transparent;text-shadow:0 0 var(--tbf,0px) #fff}
+.pc-live .pc-card{will-change:transform}
+.pc-live .pc-card::before,.pc-live .pc-card::after,.pc-live .pc-edge,.pc-live .pc-blur,.pc-live .pc-shade,.pc-live .pc-glow{will-change:opacity}
+@media(max-width:700px){.pc-card{--tb:1.4px}}
 </style><style id="xp-integration-style-end"></style></head><body>
 
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -2135,7 +2156,11 @@ function initExplorer(){
   E.cv.addEventListener('pointerdown',e=>{if(e.button!==0)return;E.drag={x:e.clientX,y:e.clientY,tx:E.tv.tx,ty:E.tv.ty,moved:false,id:e.pointerId};E._dirty=true});
   const endDrag=e=>{if(!E.drag)return;if(E.drag.moved){E.justDragged=true;setTimeout(()=>{E.justDragged=false},60)}try{E.cv.releasePointerCapture(E.drag.id)}catch(_){}E.drag=null;E.sec.classList.remove('dragging')};
   E.cv.addEventListener('pointerup',endDrag);E.cv.addEventListener('pointercancel',endDrag);
-  E.cv.addEventListener('pointermove',e=>{E._dirty=true;const r=E.cv.getBoundingClientRect();E.mx=e.clientX-r.left;E.my=e.clientY-r.top;E.inside=true;
+  // [PERF] pointer events only record the newest position; the work runs once per animation frame
+  //        (offsetX/Y = position inside the canvas → no getBoundingClientRect() / forced layout per event)
+  let pmEv=null,pmRaf=0;
+  E.cv.addEventListener('pointermove',e=>{pmEv={ox:e.offsetX,oy:e.offsetY,clientX:e.clientX,clientY:e.clientY};if(!pmRaf)pmRaf=requestAnimationFrame(()=>{pmRaf=0;const ev=pmEv;pmEv=null;if(ev)pointerMap(ev)})},{passive:true});
+  const pointerMap=e=>{E._dirty=true;E.mx=e.ox;E.my=e.oy;E.inside=true;
     if(E.drag){const dx=e.clientX-E.drag.x,dy=e.clientY-E.drag.y;
       if(!E.drag.moved&&Math.hypot(dx,dy)>5){E.drag.moved=true;E.sec.classList.add('dragging');try{E.cv.setPointerCapture(E.drag.id)}catch(_){}}
       if(E.drag.moved){const lx=E.W*.45,ly=E.H*.4;
@@ -2148,16 +2173,17 @@ function initExplorer(){
       E.pointerTarget.x=((E.mx/Math.max(1,E.W))-.5)*-36;
       E.pointerTarget.y=((E.my/Math.max(1,E.H))-.5)*-22;
     }
-    if(E.act<0){const m=toMap(E.mx,E.my);E.hover=hitZone(m.x,m.y);E.cv.style.cursor=''}});
-  E.cv.addEventListener('pointerleave',()=>{E.pointerTarget.x=0;E.pointerTarget.y=0;E._dirty=true;E.inside=false;if(E.act<0)E.hover=-1;ring.classList.remove('hot');curTxt.textContent=''});
-  E.cv.addEventListener('click',e=>{if(E.justDragged)return;const r=E.cv.getBoundingClientRect();const m=toMap(e.clientX-r.left,e.clientY-r.top);const k=hitZone(m.x,m.y);
+    if(E.act<0){const m=toMap(E.mx,E.my);E.hover=hitZone(m.x,m.y)}};
+  E.cv.addEventListener('pointerleave',()=>{if(pmRaf){cancelAnimationFrame(pmRaf);pmRaf=0;pmEv=null}E.pointerTarget.x=0;E.pointerTarget.y=0;E._dirty=true;E.inside=false;if(E.act<0)E.hover=-1;ring.classList.remove('hot');curTxt.textContent=''});
+  E.cv.addEventListener('click',e=>{if(E.justDragged)return;const m=toMap(e.offsetX,e.offsetY);const k=hitZone(m.x,m.y);
     if(k>=0&&k!==E.act)activate(k);else if(E.act>=0&&k<0)activate(-1)});
   addEventListener('keydown',e=>{if(e.key==='Escape'&&E.act>=0)activate(-1)});
 }
 const proj=(i,j,z=0)=>({x:E.ox+(i-j)*E.tw,y:E.oy+(i+j)*E.th-z});
 const toMap=(x,y)=>({x:(x-E.view.tx-E.pointerOffset.x)/E.view.s,y:(y-E.view.ty-E.pointerOffset.y)/E.view.s});
 function hitZone(mx,my){
-  let best=-1,bd=9;ZONES.forEach((z,k)=>{const c=proj(z.gi[0]+.5,z.gi[1]+.5);const R=3.5*1.414;const q=Math.pow((mx-c.x)/(R*E.tw),2)+Math.pow((my-c.y)/(R*E.th),2);if(q<1&&q<bd){bd=q;best=k}});return best;
+  let best=-1,bd=9;const R=3.5*1.414,rx=R*E.tw,ry=R*E.th;
+  ZONES.forEach((z,k)=>{const c=(G&&G.zc&&G.zc[k])||proj(z.gi[0]+.5,z.gi[1]+.5);const ax=(mx-c.x)/rx,ay=(my-c.y)/ry,q=ax*ax+ay*ay;if(q<1&&q<bd){bd=q;best=k}});return best;   // [PERF] cached centres, no pow()
 }
 function setTarget(k){
   if(k<0){E.tv={s:1,tx:0,ty:0};return}
@@ -2225,43 +2251,119 @@ if(['crossroad','street','shopping','map','play'].includes(new URLSearchParams(l
 const mixa=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
 const mixc=(a,b,t)=>{const c=mixa(a,b,t);return `rgb(${c[0]|0},${c[1]|0},${c[2]|0})`};
 const TOP=[42,36,76],TOPG=[110,60,210],TOPL=[96,132,40],LEFT=[18,15,32],RIGHT=[30,26,58],RIGHTG=[66,36,136];
-/* hologram products floating over each place: sphere · cube · cone (placeholders until product images exist).
-   idle = faint & small; hover/active = larger, brighter and sharper, with scan lines and a light beam */
+/* ===================================================================================================
+   [PERF] EXPLORE MYEONGDONG — rendering structure rebuilt for speed (same picture, same interaction)
+   · geometry cache (G): every building's projected corners, its faces / edges / glass lines as Path2D,
+     its screen-space bounds, the route polyline + segment lengths, zone centres — rebuilt only on resize
+   · colour caches: building colours are looked up from tables (256 steps) instead of building rgb()/rgba()
+     strings and arrays for every building every frame
+   · per-frame maths: the light wave depends only on i+j → 31 sin() per frame instead of 144 sin()+pow();
+     the pointer glow uses a squared distance and exp() only near the pointer
+   · culling: buildings outside the visible map area (zoomed in) are not drawn (their glow state still updates)
+   · holograms: unit geometry + trig tables precomputed; the beam / glow gradients are cached per brightness step;
+     the soft blur is applied ONCE per hologram to an offscreen sprite instead of to every one of its ~25 strokes
+     (canvas filter blur on each stroke was the main frame-time cost)
+   · light packets: 10 fills (one per trail step, all 4 packets together) instead of 40
+   · hotspots / classes / hint: written only when the value really changes; hotspots now include the same
+     pointer-parallax offset as the canvas, so markers, buildings and click areas stay aligned
+   =================================================================================================== */
+const G={key:'',cells:null,zc:[],rp:[],seg:[],tot:0,roads:null,route:null,scratch:null,sx:null};
+const Q=v=>v<=0?0:v>=1?255:(v*255+.5)|0;
+const _cLeft=[],_cRight=[],_cTop=new Map(),_cEdgeP=[],_cEdgeL=[],_cGlass=[],_cGlowP=[],_cGlowL=[];
+const colLeft=g=>_cLeft[g]||(_cLeft[g]=mixc(LEFT,RIGHTG,g/255*.6));
+const colRight=g=>_cRight[g]||(_cRight[g]=mixc(RIGHT,RIGHTG,g/255));
+const colTop=(g,lm)=>{const key=g*256+lm;let s=_cTop.get(key);if(!s){const G1=g/255,L1=lm/255;s=L1>.05?mixc(mixa(TOP,TOPG,G1),TOPL,L1*.9):mixc(TOP,TOPG,G1);_cTop.set(key,s)}return s};
+const colEdgeP=g=>_cEdgeP[g]||(_cEdgeP[g]=`rgba(157,92,255,${.28+g/255*.7})`);
+const colEdgeL=l=>_cEdgeL[l]||(_cEdgeL[l]=`rgba(197,255,53,${.3+l/255*.6})`);
+const colGlass=g=>_cGlass[g]||(_cGlass[g]=`rgba(157,92,255,${.1+g/255*.5})`);
+const colGlowP=g=>_cGlowP[g]||(_cGlowP[g]=`rgba(157,92,255,${g/255*.5})`);
+const colGlowL=g=>_cGlowL[g]||(_cGlowL[g]=`rgba(197,255,53,${g/255*.35})`);
+function buildGeo(){
+  const key=[E.ox,E.oy,E.tw,E.th,E.u].join(',');if(G.key===key&&G.cells)return;G.key=key;
+  const u=E.u;
+  G.cells=E.cells.map(c=>{
+    const a=.1,i0=c.i+a,i1=c.i+1-a,j0=c.j+a,j1=c.j+1-a,h=c.h*u;
+    const T0=proj(i0,j0,h),T1=proj(i1,j0,h),T2=proj(i1,j1,h),T3=proj(i0,j1,h),B1=proj(i1,j0,0),B2=proj(i1,j1,0),B3=proj(i0,j1,0);
+    const cc=proj(c.i+.5,c.j+.5,h*.6);
+    const L=new Path2D();L.moveTo(T3.x,T3.y);L.lineTo(T2.x,T2.y);L.lineTo(B2.x,B2.y);L.lineTo(B3.x,B3.y);L.closePath();
+    const R=new Path2D();R.moveTo(T2.x,T2.y);R.lineTo(T1.x,T1.y);R.lineTo(B1.x,B1.y);R.lineTo(B2.x,B2.y);R.closePath();
+    const T=new Path2D();T.moveTo(T0.x,T0.y);T.lineTo(T1.x,T1.y);T.lineTo(T2.x,T2.y);T.lineTo(T3.x,T3.y);T.closePath();
+    const Ed=new Path2D();Ed.moveTo(T3.x,T3.y);Ed.lineTo(T0.x,T0.y);Ed.lineTo(T1.x,T1.y);Ed.lineTo(T2.x,T2.y);Ed.lineTo(T3.x,T3.y);Ed.moveTo(T2.x,T2.y);Ed.lineTo(B2.x,B2.y);
+    let Gl=null;if(h>34*u){Gl=new Path2D();for(let f=1;f<4;f++){const t=f/4;Gl.moveTo(lerp(T2.x,B2.x,t),lerp(T2.y,B2.y,t));Gl.lineTo(lerp(T1.x,B1.x,t),lerp(T1.y,B1.y,t))}}
+    const xs=[T0.x,T1.x,T2.x,T3.x,B1.x,B2.x,B3.x],ys=[T0.y,T1.y,T2.y,T3.y,B1.y,B2.y,B3.y];
+    return {c,L,R,T,Ed,Gl,cx:cc.x,cy:cc.y,s:c.i+c.j,x0:Math.min(...xs)-3,x1:Math.max(...xs)+3,y0:Math.min(...ys)-3,y1:Math.max(...ys)+3};
+  });
+  G.zc=ZONES.map(z=>proj(z.gi[0]+.5,z.gi[1]+.5));
+  G.rp=E.route.map(q=>proj(q[0],q[1]));G.seg=[];G.tot=0;
+  for(let q=0;q<G.rp.length-1;q++){const l=Math.hypot(G.rp[q+1].x-G.rp[q].x,G.rp[q+1].y-G.rp[q].y);G.seg.push(l);G.tot+=l}
+  G.roads=new Path2D();[3,7,11,15].forEach(r=>{let a=proj(r+.5,0),b=proj(r+.5,E.N);G.roads.moveTo(a.x,a.y);G.roads.lineTo(b.x,b.y);a=proj(0,r+.5);b=proj(E.N,r+.5);G.roads.moveTo(a.x,a.y);G.roads.lineTo(b.x,b.y)});
+  G.route=new Path2D();G.rp.forEach((p,i)=>i?G.route.lineTo(p.x,p.y):G.route.moveTo(p.x,p.y));
+}
+/* ---- holograms: unit geometry, built once ---- */
+const HG=(()=>{const ring=(fn)=>{const a=new Float32Array(37*3);for(let j=0;j<=36;j++){const t=j/36*6.283,p=fn(t);a[j*3]=p[0];a[j*3+1]=p[1];a[j*3+2]=p[2]}return a};
+  const sphere=[];for(let i=1;i<6;i++){const la=-Math.PI/2+i*Math.PI/6,rr=Math.cos(la),yy=Math.sin(la);sphere.push(ring(t=>[Math.cos(t)*rr,yy,Math.sin(t)*rr]))}
+  for(let i=0;i<6;i++){const lo=i/6*Math.PI;sphere.push(ring(t=>[Math.cos(t)*Math.cos(lo),Math.sin(t),Math.cos(t)*Math.sin(lo)]))}
+  const s=.72,cubeV=new Float32Array(24);for(let i=0;i<8;i++){cubeV[i*3]=i&1?s:-s;cubeV[i*3+1]=i&2?s:-s;cubeV[i*3+2]=i&4?s:-s}
+  const cone=[ring(t=>[Math.cos(t)*.75,.75,Math.sin(t)*.75])];
+  for(let j=0;j<12;j++){const t=j/12*6.283;cone.push(new Float32Array([0,-.95,0,Math.cos(t)*.75,.75,Math.sin(t)*.75]))}
+  cone.push(ring(t=>[Math.cos(t)*.38,-.1,Math.sin(t)*.38]));
+  return {sphere,cubeV,cubeE:[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]],cubeF:[[0,1,3,2],[4,5,7,6],[0,1,5,4],[2,3,7,6],[0,2,6,4],[1,3,7,5]],cone,
+    cr:Math.cos(.42),sr:Math.sin(.42),buf:new Float32Array(37*3),cache:[],beam:[],glow:[],disc:[],edgeA:[],edgeB:[]}})();
+const hgBeam=q=>HG.beam[q]||(HG.beam[q]=(()=>{const H=q/32,g=E.ctx.createLinearGradient(0,0,0,1);g.addColorStop(0,`rgba(157,92,255,${.05+.22*H})`);g.addColorStop(1,'rgba(157,92,255,0)');return g})());
+const hgGlow=q=>HG.glow[q]||(HG.glow[q]=(()=>{const H=q/32,g=E.ctx.createRadialGradient(0,0,0,0,0,1);g.addColorStop(0,`rgba(180,140,255,${.1+.22*H})`);g.addColorStop(1,'rgba(180,140,255,0)');return g})());
+const hgDisc=q=>HG.disc[q]||(HG.disc[q]=(()=>{const v=q/64,g=E.ctx.createRadialGradient(0,0,0,0,0,1);g.addColorStop(0,`rgba(197,255,53,${.38*v})`);g.addColorStop(.5,`rgba(118,40,245,${.28*v})`);g.addColorStop(1,'rgba(118,40,245,0)');return g})());
+function holoStrokes(c,k,H,cx,cy,R,a,cs,sn){
+  // rotate (ry) + tilt (rx) + project one unit poly-line into HG.buf, then stroke it — no arrays, no closures
+  const cr=HG.cr,sr=HG.sr,b=HG.buf,lw=(.7+H*.7)*Math.max(.8,E.u),rgb=H>.5?'210,255,140':'190,160,255';
+  const line=src=>{const n=src.length/3;let zs=0;
+    for(let i=0;i<n;i++){const x=src[i*3],y=src[i*3+1],z=src[i*3+2];const X=x*cs+z*sn,Z0=-x*sn+z*cs;const Y=y*cr-Z0*sr,Z=y*sr+Z0*cr;b[i*3]=cx+X*R;b[i*3+1]=cy+Y*R;zs+=Z}
+    const zf=zs/n,al=a*(.55+.45*clamp(.5-zf*.6));
+    c.beginPath();c.moveTo(b[0],b[1]);for(let i=1;i<n;i++)c.lineTo(b[i*3],b[i*3+1]);
+    c.strokeStyle=`rgba(${rgb},${al})`;c.lineWidth=lw;c.stroke()};
+  if(k===0){HG.sphere.forEach(line)}
+  else if(k===1){const V=HG.cubeV,P=new Float32Array(24);
+    for(let i=0;i<8;i++){const x=V[i*3],y=V[i*3+1],z=V[i*3+2];const X=x*cs+z*sn,Z0=-x*sn+z*cs;P[i*3]=cx+X*R;P[i*3+1]=cy+(y*cr-Z0*sr)*R;P[i*3+2]=y*sr+Z0*cr}
+    c.fillStyle=`rgba(157,92,255,${.04+.06*H})`;
+    HG.cubeF.forEach(f=>{c.beginPath();c.moveTo(P[f[0]*3],P[f[0]*3+1]);for(let q=1;q<4;q++)c.lineTo(P[f[q]*3],P[f[q]*3+1]);c.closePath();c.fill()});
+    c.lineWidth=lw;HG.cubeE.forEach(([p,q])=>{const zf=(P[p*3+2]+P[q*3+2])/2,al=a*(.55+.45*clamp(.5-zf*.6));c.beginPath();c.moveTo(P[p*3],P[p*3+1]);c.lineTo(P[q*3],P[q*3+1]);c.strokeStyle=`rgba(${rgb},${al})`;c.stroke()})}
+  else HG.cone.forEach(line);
+}
 function drawHolos(ctx,time){
-  const u=E.u,tw=E.tw;
+  const u=E.u,M0=ctx.getTransform();
   ZONES.forEach((z,k)=>{
     const on=(E.hover===k||E.act===k);z._h=lerp(z._h||0,on?1:0,.1);const H=z._h;
-    const base=proj(z.gi[0]+.5,z.gi[1]+.5,0);
+    const base=G.zc[k];
     const top=62*u;
     const cy=base.y-top-(40+10*Math.sin(time*1.3+k*2))*u-H*18*u;
     const R=(24+H*16)*u,cx=base.x;
-    const a=.32+.6*H,ry=time*.6+k*1.3,rx=.42;
-    const P=(x,y,z2)=>{const cs=Math.cos(ry),sn=Math.sin(ry);let X=x*cs+z2*sn,Z=-x*sn+z2*cs;const cr=Math.cos(rx),sr=Math.sin(rx);let Y=y*cr-Z*sr;Z=y*sr+Z*cr;return[cx+X*R,cy+Y*R,Z]};
+    const a=.32+.6*H,ry=time*.6+k*1.3,cs=Math.cos(ry),sn=Math.sin(ry),hq=Math.round(H*32);
     ctx.save();ctx.globalCompositeOperation='lighter';
-    // beam from the ground
-    const bg=ctx.createLinearGradient(0,base.y,0,cy);bg.addColorStop(0,`rgba(157,92,255,${.05+.22*H})`);bg.addColorStop(1,'rgba(157,92,255,0)');
-    ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(base.x-R*.25,base.y);ctx.lineTo(base.x+R*.25,base.y);ctx.lineTo(cx+R*.9,cy);ctx.lineTo(cx-R*.9,cy);ctx.closePath();ctx.fill();
-    // soft volume glow
-    const gg=ctx.createRadialGradient(cx,cy,0,cx,cy,R*1.6);gg.addColorStop(0,`rgba(180,140,255,${.1+.22*H})`);gg.addColorStop(1,'rgba(180,140,255,0)');ctx.fillStyle=gg;ctx.fillRect(cx-R*1.6,cy-R*1.6,R*3.2,R*3.2);
-    if(H<.5){ctx.filter=`blur(${(1-H*2)*1.2}px)`}
-    const edges=[];
-    if(k===0){ // sphere: latitude / longitude rings
-      for(let i=1;i<6;i++){const la=-Math.PI/2+i*Math.PI/6,rr=Math.cos(la),yy=Math.sin(la);const ring=[];for(let j=0;j<=36;j++){const t=j/36*6.283;ring.push(P(Math.cos(t)*rr,yy,Math.sin(t)*rr))}edges.push(ring)}
-      for(let i=0;i<6;i++){const lo=i/6*Math.PI;const ring=[];for(let j=0;j<=36;j++){const t=j/36*6.283;ring.push(P(Math.cos(t)*Math.cos(lo),Math.sin(t),Math.cos(t)*Math.sin(lo)))}edges.push(ring)}
-    }else if(k===1){ // cube
-      const s=.72,V=[];for(let i=0;i<8;i++)V.push(P(i&1?s:-s,i&2?s:-s,i&4?s:-s));
-      [[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]].forEach(([a2,b2])=>edges.push([V[a2],V[b2]]));
-      // faces with faint fill
-      [[0,1,3,2],[4,5,7,6],[0,1,5,4],[2,3,7,6],[0,2,6,4],[1,3,7,5]].forEach(f=>{ctx.beginPath();f.forEach((q,i)=>i?ctx.lineTo(V[q][0],V[q][1]):ctx.moveTo(V[q][0],V[q][1]));ctx.closePath();ctx.fillStyle=`rgba(157,92,255,${.04+.06*H})`;ctx.fill()});
-    }else{ // cone
-      const apex=P(0,-.95,0),ring=[];for(let j=0;j<=36;j++){const t=j/36*6.283;ring.push(P(Math.cos(t)*.75,.75,Math.sin(t)*.75))}edges.push(ring);
-      for(let j=0;j<12;j++){const t=j/12*6.283;edges.push([apex,P(Math.cos(t)*.75,.75,Math.sin(t)*.75)])}
-      const mid=[];for(let j=0;j<=36;j++){const t=j/36*6.283;mid.push(P(Math.cos(t)*.38,-.1,Math.sin(t)*.38))}edges.push(mid);
-    }
-    edges.forEach(e=>{ctx.beginPath();e.forEach((q,i)=>i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]));
-      const zf=e.reduce((s,q)=>s+q[2],0)/e.length;const al=a*(.55+.45*clamp(.5-zf*.6));
-      ctx.strokeStyle=`rgba(${H>.5?'210,255,140':'190,160,255'},${al})`;ctx.lineWidth=(.7+H*.7)*Math.max(.8,u);ctx.stroke()});
-    ctx.filter='none';
+    // beam from the ground (cached gradient, drawn in a unit space: x × R, y from base → hologram centre)
+    ctx.save();ctx.translate(base.x,base.y);ctx.scale(R,cy-base.y);ctx.fillStyle=hgBeam(hq);
+    ctx.beginPath();ctx.moveTo(-.25,0);ctx.lineTo(.25,0);ctx.lineTo(.9,1);ctx.lineTo(-.9,1);ctx.closePath();ctx.fill();ctx.restore();
+    // soft volume glow (cached radial gradient in unit space)
+    ctx.save();ctx.translate(cx,cy);ctx.scale(R*1.6,R*1.6);ctx.fillStyle=hgGlow(hq);ctx.fillRect(-1,-1,2,2);ctx.restore();
+    if(H<.5){
+      // blurred while idle: draw the wireframe once into a small offscreen sprite, blur that sprite once
+      const pad=6,x0=cx-R*1.25,y0=cy-R*1.25,x1=cx+R*1.25,y1=cy+R*1.25;
+      const dx0=M0.a*x0+M0.e,dy0=M0.d*y0+M0.f,dx1=M0.a*x1+M0.e,dy1=M0.d*y1+M0.f;
+      const bx=Math.floor(Math.min(dx0,dx1))-pad,by=Math.floor(Math.min(dy0,dy1))-pad,bw=Math.ceil(Math.abs(dx1-dx0))+pad*2,bh=Math.ceil(Math.abs(dy1-dy0))+pad*2;
+      // the blurred sprite is cached per hologram and re-made at most 24×/s (rotation) or when zoom / brightness change;
+      // between re-makes it is only moved (bob, pan, parallax) — position stays smooth at the full frame rate
+      const mk=()=>(typeof OffscreenCanvas!=='undefined')?new OffscreenCanvas(bw,bh):Object.assign(document.createElement('canvas'),{width:bw,height:bh});
+      const C=HG.cache[k]||(HG.cache[k]={cv:null,x:null});const dcx=M0.a*cx+M0.e,dcy=M0.d*cy+M0.f;
+      if(!C.cv||time-C.t>=1/24||time<C.t||Math.abs(C.s-M0.a)>1e-4||Math.abs(C.H-H)>.015){
+        if(!G.scratch){G.scratch=mk();G.sx=G.scratch.getContext('2d')}
+        const S=G.scratch,sx=G.sx;if(S.width<bw||S.height<bh){S.width=Math.max(S.width,bw);S.height=Math.max(S.height,bh)}
+        sx.setTransform(1,0,0,1,0,0);sx.clearRect(0,0,bw,bh);sx.setTransform(M0.a,M0.b,M0.c,M0.d,M0.e-bx,M0.f-by);
+        sx.globalCompositeOperation='lighter';sx.lineCap='round';sx.lineJoin='round';
+        holoStrokes(sx,k,H,cx,cy,R,a,cs,sn);
+        if(!C.cv){C.cv=mk();C.x=C.cv.getContext('2d')}
+        if(C.cv.width<bw||C.cv.height<bh){C.cv.width=Math.max(C.cv.width,bw);C.cv.height=Math.max(C.cv.height,bh)}
+        C.x.setTransform(1,0,0,1,0,0);C.x.globalCompositeOperation='copy';C.x.filter=`blur(${(1-H*2)*1.2}px)`;C.x.drawImage(S,0,0,bw,bh,0,0,bw,bh);C.x.filter='none';C.x.globalCompositeOperation='source-over';
+        Object.assign(C,{t:time,s:M0.a,H,bx,by,bw,bh,dcx,dcy})}
+      ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(C.cv,0,0,C.bw,C.bh,C.bx+(dcx-C.dcx),C.by+(dcy-C.dcy),C.bw,C.bh);ctx.setTransform(M0);
+    }else holoStrokes(ctx,k,H,cx,cy,R,a,cs,sn);
     // scan line sweeping through the hologram
     const sl=cy-R+((time*.6+k*.3)%1)*R*2;ctx.fillStyle=`rgba(220,200,255,${.08+.25*H})`;ctx.fillRect(cx-R*1.1,sl,R*2.2,1);
     // ground ring
@@ -2269,8 +2371,9 @@ function drawHolos(ctx,time){
     ctx.restore();
   });
 }
+const _wave=new Float32Array(64),_pk=[];for(let tr=0;tr<10;tr++)_pk.push(`rgba(197,255,53,${(1-tr/10)*.9})`);
 function drawExplorer(time){
-  const ctx=E.ctx;if(!ctx)return;
+  const ctx=E.ctx;if(!ctx)return;buildGeo();
   const now=performance.now(),dt=Math.min(.1,Math.max(.001,(now-(E._lt||now-16.6))/1000));E._lt=now;
   const V=E.view,T=E.tv,k=RM?1:1-Math.exp(-dt*(E.drag&&E.drag.moved?30:13));
   V.s=lerp(V.s,T.s,k);V.tx=lerp(V.tx,T.tx,k);V.ty=lerp(V.ty,T.ty,k);
@@ -2278,63 +2381,62 @@ function drawExplorer(time){
   const kp=RM?1:1-Math.exp(-dt*16);
   E.pointerOffset.x=lerp(E.pointerOffset.x,E.pointerTarget.x,kp);
   E.pointerOffset.y=lerp(E.pointerOffset.y,E.pointerTarget.y,kp);
+  const ox=V.tx+E.pointerOffset.x,oy=V.ty+E.pointerOffset.y;
   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,E.cv.width,E.cv.height);
-  ctx.setTransform(E.dpr*V.s,0,0,E.dpr*V.s,E.dpr*(V.tx+E.pointerOffset.x),E.dpr*(V.ty+E.pointerOffset.y));
-  const tw=E.tw,th=E.th,u=E.u;
-  const mm=E.inside?toMap(E.mx,E.my):{x:-999,y:-999};
-  // ground roads
+  ctx.setTransform(E.dpr*V.s,0,0,E.dpr*V.s,E.dpr*ox,E.dpr*oy);
+  const tw=E.tw,u=E.u;
+  const mmx=E.inside?(E.mx-ox)/V.s:-999,mmy=E.inside?(E.my-oy)/V.s:-999;
+  // visible map-space window (for culling)
+  const vx0=-ox/V.s,vy0=-oy/V.s,vx1=(E.W-ox)/V.s,vy1=(E.H-oy)/V.s;
+  // ground roads (cached path)
   ctx.lineCap='round';ctx.lineJoin='round';
-  ctx.strokeStyle='rgba(157,92,255,.12)';ctx.lineWidth=1;
-  [3,7,11,15].forEach(r=>{let a=proj(r+.5,0),b=proj(r+.5,E.N);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();a=proj(0,r+.5);b=proj(E.N,r+.5);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()});
-  // zone ground discs
-  ZONES.forEach((z,k)=>{const c=proj(z.gi[0]+.5,z.gi[1]+.5);const on=(E.hover===k||E.act===k);z._g=lerp(z._g||0,on?1:0,.23);
-    if(z._g>.02){const R=3.5*1.414;const g=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,R*tw);g.addColorStop(0,`rgba(197,255,53,${.38*z._g})`);g.addColorStop(.5,`rgba(118,40,245,${.28*z._g})`);g.addColorStop(1,'rgba(118,40,245,0)');
-      ctx.save();ctx.translate(c.x,c.y);ctx.scale(1,.5);ctx.translate(-c.x,-c.y);ctx.fillStyle=g;ctx.beginPath();ctx.arc(c.x,c.y,R*tw,0,6.283);ctx.fill();ctx.restore()}});
-  // route glow
-  const rp=E.route.map(q=>proj(q[0],q[1]));
-  const strokeRoute=(w,col)=>{ctx.beginPath();rp.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.lineWidth=w;ctx.strokeStyle=col;ctx.stroke()};
-  strokeRoute(10*u/1.2,'rgba(118,40,245,.18)');strokeRoute(3,'rgba(157,92,255,.9)');
-  if(E.act>=0||E.hover>=0){const z=ZONES[E.act>=0?E.act:E.hover];const zk=ZONES.indexOf(z),legsOf=[zk,(zk+2)%3];legsOf.forEach(l=>{const a=rp[l],b=rp[l+1];ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineWidth=3.5;ctx.strokeStyle='rgba(197,255,53,.95)';ctx.stroke()})}
+  ctx.strokeStyle='rgba(157,92,255,.12)';ctx.lineWidth=1;ctx.stroke(G.roads);
+  // zone ground discs (cached gradients per brightness step)
+  ZONES.forEach((z,k2)=>{const c=G.zc[k2];const on=(E.hover===k2||E.act===k2);z._g=lerp(z._g||0,on?1:0,.23);
+    if(z._g>.02){const R=3.5*1.414*tw;ctx.save();ctx.translate(c.x,c.y);ctx.scale(R,R*.5);ctx.fillStyle=hgDisc(Math.round(z._g*64));ctx.beginPath();ctx.arc(0,0,1,0,6.283);ctx.fill();ctx.restore()}});
+  // route glow (cached path)
+  const rp=G.rp;
+  ctx.lineWidth=10*u/1.2;ctx.strokeStyle='rgba(118,40,245,.18)';ctx.stroke(G.route);
+  ctx.lineWidth=3;ctx.strokeStyle='rgba(157,92,255,.9)';ctx.stroke(G.route);
+  if(E.act>=0||E.hover>=0){const zk=E.act>=0?E.act:E.hover,legsOf=[zk,(zk+2)%3];ctx.lineWidth=3.5;ctx.strokeStyle='rgba(197,255,53,.95)';
+    legsOf.forEach(l=>{const a=rp[l],b=rp[l+1];ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()})}
   // buildings
-  for(const c of E.cells){
-    const a=.1,i0=c.i+a,i1=c.i+1-a,j0=c.j+a,j1=c.j+1-a;const h=c.h*u*(1+(E.act>=0&&c.zi===E.act?.0:0));
-    const T0=proj(i0,j0,h),T1=proj(i1,j0,h),T2=proj(i1,j1,h),T3=proj(i0,j1,h);
-    const B1=proj(i1,j0,0),B2=proj(i1,j1,0),B3=proj(i0,j1,0);
-    // glow target
-    const cc=proj(c.i+.5,c.j+.5,h*.6);
+  for(let s=0;s<=30;s++){const w=Math.sin(s*.55-time*1.3);if(w>0){const w2=w*w,w4=w2*w2,w8=w4*w4;_wave[s]=w8*w2*.35}else _wave[s]=0}
+  const inv=1/((tw*2.6)*(tw*2.6)),inside=E.inside,act=E.act,hov=E.hover;
+  ctx.lineWidth=.9;
+  for(const b of G.cells){
+    const c=b.c;
     let g=0;
-    const d=Math.hypot(cc.x-mm.x,cc.y-mm.y);g=Math.exp(-Math.pow(d/(tw*2.6),2))*(E.inside?1:0);
-    const wv=Math.max(0,Math.sin((c.i+c.j)*.55-time*1.3));g=Math.max(g,Math.pow(wv,10)*.35);
-    let lz=0;if(c.zi>=0){if(E.hover===c.zi)lz=.7;if(E.act===c.zi)lz=1;g=Math.max(g,lz*.7)}
-    if(E.act>=0&&c.zi!==E.act)g*=.4;
-    c.g=lerp(c.g,g,.14);c.lime=lerp(c.lime,lz,.12);
-    const G=c.g,Lm=c.lime;
-    const mixTop=Lm>.05?mixc(mixa(TOP,TOPG,G),TOPL,Lm*.9):mixc(TOP,TOPG,G);
-    // faces
-    ctx.beginPath();ctx.moveTo(T3.x,T3.y);ctx.lineTo(T2.x,T2.y);ctx.lineTo(B2.x,B2.y);ctx.lineTo(B3.x,B3.y);ctx.closePath();ctx.fillStyle=mixc(LEFT,RIGHTG,G*.6);ctx.fill();
-    ctx.beginPath();ctx.moveTo(T2.x,T2.y);ctx.lineTo(T1.x,T1.y);ctx.lineTo(B1.x,B1.y);ctx.lineTo(B2.x,B2.y);ctx.closePath();ctx.fillStyle=mixc(RIGHT,RIGHTG,G);ctx.fill();
-    ctx.beginPath();ctx.moveTo(T0.x,T0.y);ctx.lineTo(T1.x,T1.y);ctx.lineTo(T2.x,T2.y);ctx.lineTo(T3.x,T3.y);ctx.closePath();ctx.fillStyle=mixTop;ctx.fill();
-    // glass lines on tall
-    if(h>34*u){ctx.beginPath();for(let f=1;f<4;f++){const t=f/4;ctx.moveTo(lerp(T2.x,B2.x,t),lerp(T2.y,B2.y,t));ctx.lineTo(lerp(T1.x,B1.x,t),lerp(T1.y,B1.y,t))}ctx.strokeStyle=`rgba(157,92,255,${.1+G*.5})`;ctx.lineWidth=.7;ctx.stroke()}
-    // edges
-    const ea=.28+G*.7;
-    ctx.beginPath();ctx.moveTo(T3.x,T3.y);ctx.lineTo(T0.x,T0.y);ctx.lineTo(T1.x,T1.y);ctx.lineTo(T2.x,T2.y);ctx.lineTo(T3.x,T3.y);ctx.moveTo(T2.x,T2.y);ctx.lineTo(B2.x,B2.y);
-    ctx.strokeStyle=Lm>.05?`rgba(197,255,53,${.3+Lm*.6})`:`rgba(157,92,255,${ea})`;ctx.lineWidth=.9;ctx.stroke();
-    if(G>.35){ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle=Lm>.05?`rgba(197,255,53,${G*.35})`:`rgba(157,92,255,${G*.5})`;ctx.lineWidth=2.4;ctx.stroke();ctx.restore()}
+    if(inside){const dx=b.cx-mmx,dy=b.cy-mmy,q=(dx*dx+dy*dy)*inv;if(q<12)g=Math.exp(-q)}
+    const wv=_wave[b.s];if(wv>g)g=wv;
+    let lz=0;if(c.zi>=0){if(hov===c.zi)lz=.7;if(act===c.zi)lz=1;if(lz*.7>g)g=lz*.7}
+    if(act>=0&&c.zi!==act)g*=.4;
+    c.g+=(g-c.g)*.14;c.lime+=(lz-c.lime)*.12;
+    if(b.x1<vx0||b.x0>vx1||b.y1<vy0||b.y0>vy1)continue;          // off screen: state updated, nothing drawn
+    const Gq=Q(c.g),Lm=c.lime,Lq=Q(Lm);
+    ctx.fillStyle=colLeft(Gq);ctx.fill(b.L);
+    ctx.fillStyle=colRight(Gq);ctx.fill(b.R);
+    ctx.fillStyle=colTop(Gq,Lm>.05?Lq:0);ctx.fill(b.T);
+    if(b.Gl){ctx.strokeStyle=colGlass(Gq);ctx.lineWidth=.7;ctx.stroke(b.Gl);ctx.lineWidth=.9}
+    ctx.strokeStyle=Lm>.05?colEdgeL(Lq):colEdgeP(Gq);ctx.stroke(b.Ed);
+    if(c.g>.35){ctx.globalCompositeOperation='lighter';ctx.strokeStyle=Lm>.05?colGlowL(Gq):colGlowP(Gq);ctx.lineWidth=2.4;ctx.stroke(b.Ed);ctx.lineWidth=.9;ctx.globalCompositeOperation='source-over'}
   }
-  // light packets
-  let tot=0;const seg=[];for(let q=0;q<rp.length-1;q++){const l=Math.hypot(rp[q+1].x-rp[q].x,rp[q+1].y-rp[q].y);seg.push(l);tot+=l}
-  const at=f=>{f=((f%1)+1)%1;let d=f*tot;for(let q=0;q<seg.length;q++){if(d<=seg[q]){const t=d/seg[q];return{x:lerp(rp[q].x,rp[q+1].x,t),y:lerp(rp[q].y,rp[q+1].y,t)}}d-=seg[q]}return rp[0]};
-  ctx.save();ctx.globalCompositeOperation='lighter';
-  for(let n=0;n<4;n++){const f=time*.07+n*.25;for(let tr=0;tr<10;tr++){const p=at(f-tr*.006);const al=(1-tr/10);ctx.fillStyle=`rgba(197,255,53,${al*.9})`;ctx.beginPath();ctx.arc(p.x,p.y,(3.2-tr*.22)*Math.max(.7,u/1.3),0,6.283);ctx.fill()}}
-  ctx.restore();
+  // light packets — one fill per trail step for all four packets (positions from the cached route lengths)
+  const seg=G.seg,tot=G.tot,ps=Math.max(.7,u/1.3);
+  const at=(f,o)=>{f=((f%1)+1)%1;let d=f*tot;for(let q=0;q<seg.length;q++){if(d<=seg[q]){const t=d/seg[q];o.x=rp[q].x+(rp[q+1].x-rp[q].x)*t;o.y=rp[q].y+(rp[q+1].y-rp[q].y)*t;return o}d-=seg[q]}o.x=rp[0].x;o.y=rp[0].y;return o};
+  ctx.globalCompositeOperation='lighter';const P0={x:0,y:0};
+  for(let tr=0;tr<10;tr++){ctx.fillStyle=_pk[tr];ctx.beginPath();const r=(3.2-tr*.22)*ps;
+    for(let n=0;n<4;n++){at(time*.07+n*.25-tr*.006,P0);ctx.moveTo(P0.x+r,P0.y);ctx.arc(P0.x,P0.y,r,0,6.283)}ctx.fill()}
+  ctx.globalCompositeOperation='source-over';
   drawHolos(ctx,time);
-  // hotspots follow
-  E.hs.forEach((d,k)=>{const z=ZONES[k];const c=proj(z.gi[0]+.5,z.gi[1]+.5);const x=V.tx+V.s*c.x,y=V.ty+V.s*c.y;
-    d.style.transform=`translate3d(${x}px,${y}px,0)`;d.classList.toggle('hover',E.hover===k&&E.act<0);d.classList.toggle('act',E.act===k);d.classList.toggle('dim',E.act>=0&&E.act!==k)});
+  // hotspots follow — same transform as the canvas (incl. pointer parallax); DOM written only on change
+  E.hs.forEach((d,k2)=>{const c=G.zc[k2];const x=ox+V.s*c.x,y=oy+V.s*c.y;
+    if(Math.abs(x-(d._x??-1e9))>.05||Math.abs(y-(d._y??-1e9))>.05){d._x=x;d._y=y;d.style.transform=`translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0)`}
+    const st=(E.hover===k2&&E.act<0?1:0)|(E.act===k2?2:0)|(E.act>=0&&E.act!==k2?4:0);
+    if(st!==d._st){d._st=st;d.classList.toggle('hover',!!(st&1));d.classList.toggle('act',!!(st&2));d.classList.toggle('dim',!!(st&4))}});
   // cursor affordance
   if(E.act<0&&E.inside){const on=E.hover>=0;if(on!==E._cursorOn){E._cursorOn=on;ring.classList.toggle('hot',on);curTxt.textContent=on?'ENTER':''}}
-  $('#exHint').style.opacity=E.act>=0?0:1;
+  const ho=E.act>=0?'0':'1';if(ho!==E._hintO){E._hintO=ho;(E._hint||(E._hint=$('#exHint'))).style.opacity=ho}
 }
 
 /* ============ ABOUT / progress / nav ============ */
@@ -2492,37 +2594,43 @@ start();
 /* [EDIT #4] THREE PRODUCTS — FOCUS & BLUR (80%) + SUBTLE DEPTH & GLOW (20%)
    · three cards always visible, fixed 3D arrangement (left · centre · right)
    · the card nearest to the pointer takes the focus: sharp, a touch forward, soft purple edge glow
-   · the others blur slightly and dim; pointer away → focus eases back to the centre card
-   · removed: click-through to personal sites, click/drag paging, manual slot rotation (map keeps the site links) */
+   · the others blur slightly and dim; pointer away → focus eases back to the default card
+   [PERF] same look, cheaper frames:
+   · per frame only transform + one custom property (--f) per card are written, and only when they changed;
+     blur, dimming, glow, edge and shadow are fixed layers whose opacity CSS derives from --f
+   · the blurred look comes from a pre-blurred copy of each image (made once, ~1 MB per card), not from a live
+     filter on the whole card; text softens with text-shadow
+   · pointer: listened to only while the section is on screen, one update per animation frame, the stage
+     rectangle is cached (refreshed on scroll / resize / layout change only)
+   · the animation loop stops as soon as the focus has settled */
 (()=>{
 const st=document.getElementById('pcStage');if(!st)return;
 const cards=[...st.querySelectorAll('.pc-card')],dots=[...document.querySelectorAll('#pcDots i')],N=cards.length;
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SLOT=[0,1,-1];                                   // DOM order EMERGENCY · SMART BASKET · BRIDGE → screen: BRIDGE left · EMERGENCY centre · SMART BASKET right (unchanged)
-/* [V8] one rule for every card. V7 gave each slot its own base transform (side cards sat at z-190 / scale .93),
-   so a focused side card stayed smaller than the centre card and only its glow changed. Now every card shares
-   the same base plane & scale; focus = scale 1.06 + forward 60px + sharp + purple edge — identical for all three. */
 const DEFAULT=SLOT.indexOf(-1);                        // BRIDGE (first card) is the default focus
 const CENTRE=DEFAULT;
-cards.forEach(c=>{const sh=document.createElement('i');sh.className='pc-shade';c.appendChild(sh);c._sh=sh;
-  const gw=document.createElement('i');gw.className='pc-glow';c.appendChild(gw);c._gw=gw});
+cards.forEach(c=>{const inn=document.createElement('div');inn.className='pc-in';while(c.firstChild)inn.appendChild(c.firstChild);c.appendChild(inn);
+  const sh=document.createElement('i');sh.className='pc-shade';inn.appendChild(sh);c._sh=sh;
+  const gw=document.createElement('i');gw.className='pc-glow';inn.appendChild(gw);c._gw=gw;
+  const ed=document.createElement('i');ed.className='pc-edge';c.appendChild(ed);
+  c._w={tf:'',f:'',z:'',soft:null}});
 const foc=cards.map((_,i)=>i===DEFAULT?1:0);let target=DEFAULT,raf=0,last=0,front=-1,touchT=0,geo={gap:300,w:300};
 const FOCUS={scale:1.06,z:60,blur:2.2,dim:.8,sat:.88,shade:.1,tilt:4};
 function metrics(){const w=cards[0].offsetWidth||300,narrow=innerWidth<700;geo={w,gap:w*(narrow?1.07:1.12),narrow}}
 function layout(){
   const {gap}=geo;let fi=0,best=-1;
-  cards.forEach((c,i)=>{
+  for(let i=0;i<N;i++){const c=cards[i],W=c._w;
     const d=SLOT[i],f=foc[i];
     if(f>best){best=f;fi=i}
     const x=d*gap,z=f*FOCUS.z,sc=1+(FOCUS.scale-1)*f,ry=-d*FOCUS.tilt*(1-f);
-    c.style.transform=`translate(-50%,-50%) translate3d(${x.toFixed(1)}px,0,${z.toFixed(1)}px) rotateY(${ry.toFixed(2)}deg) scale(${sc.toFixed(4)})`;
-    c.style.filter=f>.995?'none':`blur(${((1-f)*(geo.narrow?1.4:FOCUS.blur)).toFixed(2)}px) brightness(${(FOCUS.dim+(1-FOCUS.dim)*f).toFixed(3)}) saturate(${(FOCUS.sat+(1-FOCUS.sat)*f).toFixed(3)})`;
-    c.style.zIndex=String(10+Math.round(f*10));
-    c._sh.style.opacity=((1-f)*FOCUS.shade).toFixed(3);
-    c._gw.style.opacity=(f*f).toFixed(3);
-    c.style.borderColor=`rgba(${Math.round(157+33*f)},${Math.round(92+48*f)},255,${(.35+.5*f).toFixed(3)})`;
-    c.style.boxShadow=`0 ${(30+20*f).toFixed(0)}px ${(70+30*f).toFixed(0)}px rgba(0,0,0,.6),0 0 ${(60*f).toFixed(1)}px rgba(118,40,245,${(.5*f).toFixed(3)})`;
-  });
+    const tf=`translate(-50%,-50%) translate3d(${x.toFixed(1)}px,0,${z.toFixed(1)}px) rotateY(${ry.toFixed(2)}deg) scale(${sc.toFixed(4)})`;
+    if(tf!==W.tf){W.tf=tf;c.style.transform=tf}
+    const fs=f.toFixed(3);if(fs!==W.f){W.f=fs;c.style.setProperty('--f',fs)}
+    const zi=String(10+Math.round(f*10));if(zi!==W.z){W.z=zi;c.style.zIndex=zi}
+    const soft=f<.995;if(soft!==W.soft){W.soft=soft;c.classList.toggle('soft',soft)}
+    const tb=soft?(Math.round((1-f)*(geo.narrow?1.4:FOCUS.blur)*2*4)/4).toFixed(2)+'px':'0px';   /* text-shadow radius = 2 × filter blur (σ) */if(tb!==W.tb){W.tb=tb;c.style.setProperty('--tbf',tb)}   // text softness in ¼-px steps (few text repaints)
+  }
   if(fi!==front){front=fi;cards.forEach((c,i)=>c.classList.toggle('front',i===fi));dots.forEach((d,i)=>d.classList.toggle('on',SLOT[fi]+1===i))}
 }
 function tick(ts){
@@ -2530,30 +2638,63 @@ function tick(ts){
   const k=RM?1:1-Math.exp(-dt*7);let busy=false;
   for(let i=0;i<N;i++){const t=i===target?1:0;foc[i]+=(t-foc[i])*k;if(Math.abs(t-foc[i])<.002)foc[i]=t;else busy=true}
   layout();
-  if(busy)raf=requestAnimationFrame(tick);else last=0;
+  if(busy)raf=requestAnimationFrame(tick);else last=0;   // settled → no more frames
 }
 const kick=()=>{if(!raf)raf=requestAnimationFrame(tick)};
-const setTarget=t=>{if(t!==target){target=t;kick()}};
+const setTarget=t=>{if(t!==target){target=t;if(vis)kick();else{for(let i=0;i<N;i++)foc[i]=i===t?1:0;layout()}}};
+/* ---- cached stage rectangle (refreshed on scroll / resize / layout change, read at most once per frame) ---- */
+let rect=null,rectDirty=true,vis=false;
+const stageRect=()=>{if(rectDirty||!rect){rect=st.getBoundingClientRect();rectDirty=false}return rect};
 function nearest(x,y){
-  const r=st.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return CENTRE;
+  const r=stageRect();if(r.bottom<0||r.top>innerHeight)return CENTRE;
   const m=Math.max(40,geo.gap*.25);
   if(x<r.left-m||x>r.right+m||y<r.top-m||y>r.bottom+m)return CENTRE;   // pointer away from the slot → back to the default (BRIDGE)
   const cx=r.left+r.width/2;let bi=CENTRE,bd=1e9;
-  SLOT.forEach((d,i)=>{const dd=Math.abs(x-(cx+d*geo.gap));if(dd<bd){bd=dd;bi=i}});
+  for(let i=0;i<N;i++){const dd=Math.abs(x-(cx+SLOT[i]*geo.gap));if(dd<bd){bd=dd;bi=i}}
   return bi;
 }
-addEventListener('pointermove',e=>{if(e.pointerType==='touch')return;setTarget(nearest(e.clientX,e.clientY))},{passive:true});
+/* ---- pointer: newest position only, processed once per animation frame, only while the section is visible ---- */
+let px=0,py=0,pRaf=0;
+const proc=()=>{pRaf=0;setTarget(nearest(px,py))};
+const onMove=e=>{if(e.pointerType==='touch')return;px=e.clientX;py=e.clientY;if(!pRaf)pRaf=requestAnimationFrame(proc)};
+const onScroll=()=>{rectDirty=true};
+const live=on=>{if(on===vis)return;vis=on;st.classList.toggle('pc-live',on);
+  if(on){rectDirty=true;addEventListener('pointermove',onMove,{passive:true});addEventListener('scroll',onScroll,{passive:true})}
+  else{removeEventListener('pointermove',onMove);removeEventListener('scroll',onScroll);if(pRaf){cancelAnimationFrame(pRaf);pRaf=0}
+    if(raf){cancelAnimationFrame(raf);raf=0;last=0}setTarget(CENTRE)}};
+if('IntersectionObserver' in window)new IntersectionObserver(es=>live(es[es.length-1].isIntersecting),{rootMargin:'120px 0px'}).observe(st);else live(true);
+if('ResizeObserver' in window)new ResizeObserver(()=>{rectDirty=true}).observe(document.body);
 document.documentElement.addEventListener('pointerleave',()=>setTarget(CENTRE));
 addEventListener('blur',()=>setTarget(CENTRE));
-// touch: a tap brings that card into focus, then it eases back to the centre (no navigation)
+// touch: a tap brings that card into focus, then it eases back to the default (no navigation)
 cards.forEach((c,i)=>{
   c.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch')return;setTarget(i);clearTimeout(touchT);touchT=setTimeout(()=>setTarget(CENTRE),3200)});
   c.addEventListener('focus',()=>setTarget(i));c.addEventListener('blur',()=>setTarget(CENTRE));
   c.addEventListener('dragstart',e=>e.preventDefault());
 });
 st.addEventListener('selectstart',e=>e.preventDefault());
-addEventListener('resize',()=>{metrics();layout()});
+/* ---- pre-blurred image copies (made once per card in idle time; remade only if the card size changes a lot) ---- */
+const idle=window.requestIdleCallback?(f=>requestIdleCallback(f,{timeout:1200})):(f=>setTimeout(f,60));
+let filterOK=null;
+function makeBlur(c){const img=c.querySelector('.pc-img img');if(!img)return;
+  const go=()=>{const bw=img.offsetWidth,bh=img.offsetHeight,nw=img.naturalWidth,nh=img.naturalHeight;if(!bw||!bh||!nw||!nh)return;
+    const dpr=Math.min(devicePixelRatio||1,2),sc=Math.max(bw/nw,bh/nh)*dpr,k=Math.min(1,sc);
+    const cw=Math.max(1,Math.round(nw*k)),ch=Math.max(1,Math.round(nh*k)),rad=(geo.narrow?1.4:FOCUS.blur)*dpr*(k/sc);
+    if(c._bl&&Math.abs(c._bl.k-k)/k<.2&&c._bl.n===geo.narrow)return;
+    const cv=(c._bl&&c._bl.cv)||document.createElement('canvas');cv.width=cw;cv.height=ch;const x=cv.getContext('2d');
+    if(filterOK===null){x.filter='blur(1px)';filterOK=x.filter==='blur(1px)';x.filter='none'}
+    if(filterOK){x.filter=`blur(${rad.toFixed(2)}px) saturate(${FOCUS.sat})`}else cv.style.filter=`blur(${geo.narrow?1.4:FOCUS.blur}px) saturate(${FOCUS.sat})`;
+    if(filterOK){const f0=x.filter;x.filter='none';x.drawImage(img,0,0,cw,ch);x.filter=f0}   // opaque base so the blurred rim never turns see-through
+    x.drawImage(img,0,0,cw,ch);x.filter='none';
+    if(!c._bl){cv.className='pc-blur';cv.setAttribute('aria-hidden','true');cv.style.objectPosition=img.style.objectPosition||'';img.after(cv)}
+    c._bl={cv,k,n:geo.narrow};c.classList.add('blur-ready')};
+  const run=()=>idle(()=>{if(img.decode)img.decode().then(go,go);else go()});
+  if(img.complete&&img.naturalWidth)run();else img.addEventListener('load',run,{once:true});
+}
+let rzT=0;
+addEventListener('resize',()=>{metrics();rectDirty=true;layout();clearTimeout(rzT);rzT=setTimeout(()=>cards.forEach(makeBlur),300)});
 metrics();layout();
+cards.forEach(makeBlur);
 })();
 </script><div id="gameLayer" aria-hidden="true"><div class="gl-load"><span>ENTERING 2030 MYEONGDONG</span><i><b></b></i></div></div>
 <script id="game-layer-script">
@@ -2568,6 +2709,7 @@ metrics();layout();
  const create=()=>{if(ifr)return;ifr=document.createElement('iframe');ifr.src='game.html?embed=1';ifr.title='2030 명동 1인칭 탐험';
    ifr.setAttribute('allow','fullscreen');ifr.setAttribute('tabindex','-1');layer.appendChild(ifr);ready=false};
  const destroy=()=>{if(!ifr||layer.classList.contains('on'))return;try{ifr.contentWindow.postMessage({md2030:1,type:'pause'},'*')}catch(_){}
+   try{const _c=ifr.contentDocument&&ifr.contentDocument.getElementById('ctyCv'),_g=_c&&_c.getContext('webgl2'),_x=_g&&_g.getExtension('WEBGL_lose_context');if(_x)_x.loseContext()}catch(_){}   /* [V2-LOWRISK] hand the GPU context back right away (same-origin only; ignored on file://) */
    try{ifr.src='about:blank'}catch(_){}ifr.remove();ifr=null;ready=false};
  const enter=()=>{if(!ifr)return;const w=ifr.contentWindow;let ok=false;
    try{ok=!!(w.MD2030GAME&&w.MD2030GAME.enter())}catch(_){}               // same origin: direct call inside the click → pointer lock allowed

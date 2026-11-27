@@ -402,11 +402,14 @@ CE.Renderer=class{
     gl.texImage2D(gl.TEXTURE_2D,0,this.hdr?gl.RGBA16F:gl.RGBA8,w,h,0,gl.RGBA,this.hdr?gl.HALF_FLOAT:gl.UNSIGNED_BYTE,null);
     [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER].forEach(p=>gl.texParameteri(gl.TEXTURE_2D,p,gl.LINEAR));[gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T].forEach(p=>gl.texParameteri(gl.TEXTURE_2D,p,gl.CLAMP_TO_EDGE));
     const fb=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
-    if(depth){const rb=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,rb);gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT24,w,h);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,rb)}
-    return{t,fb,w,h}}
-  resize(){const gl=this.gl,dpr=Math.min(devicePixelRatio||1,matchMedia("(pointer: coarse)").matches?1.25:1.5),cw=this.cv.clientWidth||innerWidth,ch=this.cv.clientHeight||innerHeight;
+    let rb=null;if(depth){rb=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,rb);gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT24,w,h);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,rb)}
+    return{t,fb,w,h,rb}}
+  /* [V2-LOWRISK] free a render target created by makeTarget (resize used to leave the old ones to the garbage collector) */
+  freeTarget(o){if(!o)return;const gl=this.gl;gl.deleteTexture(o.t);gl.deleteFramebuffer(o.fb);if(o.rb)gl.deleteRenderbuffer(o.rb)}
+  resize(){const gl=this.gl,dpr=Math.min(devicePixelRatio||1,1.25)/* [V3-R1a] was 1.5 on desktop */,cw=this.cv.clientWidth||innerWidth,ch=this.cv.clientHeight||innerHeight;
     let s=dpr*this.scale;if(cw*s>1920)s=1920/cw;const w=Math.max(2,Math.round(cw*s)),h=Math.max(2,Math.round(ch*s));
     if(this.W===w&&this.H===h)return;this.W=w;this.H=h;this.cv.width=w;this.cv.height=h;
+    ['rtMain','rtA','rtB','rtC','rtD','rtRefl'].forEach(k=>{this.freeTarget(this[k]);this[k]=null});   // [V2-LOWRISK] release previous targets before re-allocating
     this.rtMain=this.makeTarget(w,h,true);const bw=Math.max(2,w>>2),bh=Math.max(2,h>>2);this.rtA=this.makeTarget(bw,bh);this.rtB=this.makeTarget(bw,bh);
     const cw2=Math.max(2,w>>3),ch2=Math.max(2,h>>3);this.rtC=this.makeTarget(cw2,ch2);this.rtD=this.makeTarget(cw2,ch2);this.rtRefl=this.makeTarget(Math.max(2,w>>1),Math.max(2,h>>1),true)}
   /* frame: cam {pos,yaw,pitch,fov}, draws: [{mesh, model, tint, rim, hl, hlc}] */
@@ -452,7 +455,7 @@ CE.Renderer=class{
     const cp=cam.pos,sel=this._lsel||(this._lsel=[]);sel.length=0;
     for(const l of this.lights){const d=Math.sqrt((l.p[0]-cp[0])**2+(l.p[1]-cp[1])**2+(l.p[2]-cp[2])**2)-l.r*1.6;sel.push([l,d])}
     sel.sort((a,b)=>a[1]-b[1]);const NL=Math.min(32,sel.length);const cut=sel.length>32?sel[32][1]:1e9;
-    const lp=new Float32Array(128),lc=new Float32Array(96);let L=[];
+    const lp=this._lpA||(this._lpA=new Float32Array(128)),lc=this._lcA||(this._lcA=new Float32Array(96));lp.fill(0);lc.fill(0);let L=[];   // [V2-LOWRISK] reused buffers (same contents as a fresh zeroed array)
     for(let i=0;i<NL;i++){const[l,d]=sel[i];const lo=cut-Math.max(6,Math.abs(cut)*.35);const f=cut>=1e9?1:1-Math.min(1,Math.max(0,(d-lo)/(cut-lo)));const fs=f*f*(3-2*f);
       lp.set([l.p[0],l.p[1],l.p[2],l.r],i*4);lc.set(l.c.map(x=>x*(l.k??1)*fs),i*3);L.push(l)}
     return this._lpk={lp,lc,n:NL,f:this._frame}}

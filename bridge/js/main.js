@@ -6,9 +6,12 @@
   'use strict';
   const BR = window.BR, cfg = window.BRIDGE_CONFIG || {};
   const $ = (s, r) => (r || document).querySelector(s), $$ = (s, r) => [...(r || document).querySelectorAll(s)];
+  // [OPT] per-frame lookups of static nodes: memoised after the first successful query (same node / same order as before)
+  const _m1 = {}, _mA = {};
+  const $m = s => _m1[s] || (_m1[s] = $(s)), $$m = s => (_mA[s] && _mA[s].length) ? _mA[s] : (_mA[s] = $$(s));
   const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.min(b == null ? 1 : b, Math.max(a == null ? 0 : a, v));
   const sm = t => t * t * (3 - 2 * t);
-  const STILL = /[?&]still/.test(location.search);
+  const STILL = /[?&]still/.test(location.search), NOSKIP = /[?&]noskip/.test(location.search);
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(hover:hover) and (pointer:fine)').matches;
   const root = document.documentElement;
@@ -26,7 +29,7 @@
   ------------------------------------------------------------------ */
   const D = { eye: [0, 0, 6], tg: [0, 0, 0], fov: 32, vis: 0, ledT: W, ledB: [.6, .6, .64], studio: 0, purple: .6, lime: .2, dark: 0, hband: 0, floor: 0, rib: 0, part: 0, strk: 0, warp: 0, flash: 0, fade: 0, fit: 0, spin: 0, doorA: 0, doorZ: 1, solid: 0, halo: 0, rim: 0, beam: 0, wave: 0, px: 0, gate: 0, gateA: 0, arc: 0, pA: 0, pX: 0, pY: 0, pW: .07, pF: 0, pH: 0, pI: 0, pS: 0, pB: 0, pHd: 3, tun: 0, tz: 0, hz: 0, mcu: 0, mcuK: 0 };
   const O = (az, el, d, ty, tx) => { ty = ty || 0; tx = tx || 0; const a = az * Math.PI / 180, e = el * Math.PI / 180; return { eye: [tx + d * Math.sin(a) * Math.cos(e), ty + d * Math.sin(e), d * Math.cos(a) * Math.cos(e)], tg: [tx, ty, 0] }; };
-  const STUDIO = { vis: 1, studio: 1, hband: 0, ledT: W, purple: 0, dark: 0, floor: 1, fit: 1, solid: .96, halo: .4, rim: .5, beam: 1 };
+  const STUDIO = { vis: 1, studio: 1, hband: 0, ledT: W, purple: 0, dark: 0, floor: 1, fit: 1, solid: 1, halo: .4, rim: .5, beam: 1 };
   const R0 = { eye: [0, 0, 2.4], tg: [0, 0, -5] };
   const SC = {
     a1: [[0, { ...R0, gate: 0, gateA: 1, arc: .55, part: .16, purple: .16 }],
@@ -55,7 +58,7 @@
     a4: [[0, { ...O(0, 2, 4.3, -.03), ...STUDIO, hband: 0, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }], [.12, { ...O(0, 5, 4.5, -.08, .0), ...STUDIO, hband: 0, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }], [1, { ...O(0, 5, 4.5, -.08, .0), ...STUDIO, hband: 0, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }]],
     a5: [[0, { solid: 1, halo: .35, part: .1, px: 1 }], [1, { solid: 1, halo: .35, part: .1, px: 1 }]],
     // ACT06: a quiet, dark stage — one soft core of light behind the MCU, no ribbons, no particles, no decorative trails
-    a6: [[0, { ...R0, solid: .55, halo: .9, purple: .1 }], [1, { ...R0, solid: .55, halo: .9, purple: .1 }]],
+    a6c: [[0, { ...R0, solid: 1, halo: .12, part: 0, purple: .12 }], [1, { ...R0, solid: 1, halo: .12, part: 0, purple: .12 }]],   // [V5] structure slide: background is just dark (no grid, no fluted beam)
     a6b: [[0, { ...R0, solid: 1, halo: .3, part: .06, px: 1, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }], [1, { ...R0, solid: 1, halo: .3, part: .06, px: 1, pI: .38, pS: 1, pF: 1, pX: -1.05, pY: -.1, pA: .04, pW: .09, pH: .35, pHd: 1.0 }]],
     a7: [[0, { ...R0, arc: .3, part: .18, purple: .2 }],
       [.08, { ...R0, doorA: 1, doorZ: 22, part: .5, strk: .6, warp: .6, flash: 0, purple: .45 }],
@@ -188,7 +191,7 @@
   function selHS(i, focus) {
     const changed = i !== hsSel || (focus && !hsFocus); hsSel = i; hsFocus = !!focus; const h = HS[i];
     $$('button', vlist).forEach((b, j) => b.classList.toggle('on', j === i && hsFocus));
-    $('#hsNum').textContent = '0' + (i + 1) + ' / 05'; $('#hsTitle').textContent = h.k; $('#hsBody').textContent = h.body;
+    $('#hsNum').textContent = '0' + (i + 1) + ' / 05'; $('#hsTitle').textContent = h.k; { const k = h.body.indexOf('. '); $('#hsBody').innerHTML = k > 0 ? '<b>' + h.body.slice(0, k + 1) + '</b> ' + h.body.slice(k + 2) : h.body; }   // [V5] first sentence is the headline, the rest is support
     $('#hsPts').innerHTML = h.pts.map((x, n) => '<li style="animation-delay:' + (.25 + n * .12) + 's">' + x + '</li>').join('');
     const io = $('#hsIO'); io.textContent = h.io; io.classList.toggle('out', h.io === 'RESPONSE');
     call.querySelector('em').textContent = '0' + (i + 1); call.querySelector('b').textContent = h.k; call.querySelector('span').textContent = h.io;
@@ -244,6 +247,7 @@
     simState = i; if (user) simUser = true;
     $$('.st').forEach((b, j) => { b.classList.toggle('on', j === i); b.setAttribute('aria-selected', j === i); });
     const s = SIM[i]; $('#simK').textContent = s.k; $('#simT').textContent = s.t; $('#simL').innerHTML = s.l.map(x => '<li>' + x + '</li>').join('');
+    { const sd = $m('.sim-desc'); sd.classList.remove('swap'); void sd.offsetWidth; sd.classList.add('swap'); }   // [V5] text re-enters on every state change
   }
   $$('.st').forEach(b => b.addEventListener('click', () => setSim(+b.dataset.st, true)));
   setSim(0);
@@ -328,57 +332,8 @@
   aIn.style.transformOrigin = '0 0';
   setAnat(-1);
 
-  /* ------------------------------------------------------------------
-     ACT06 system map: nodes assemble, lines draw, packets travel
-  ------------------------------------------------------------------ */
-  const NS = 'http://www.w3.org/2000/svg';
-  const sysEl = $('#sysmap'), sysSvg = $('#sysLines'), ringEl = $('#ring'), sysIn = $$('.s6-col.in .nd'), sysOut = $$('.s6-col.out .nd'), prinEl = $$('#prin li'), sysPaths = [];
-  [...sysIn, ...sysOut].forEach((n, i) => { const pa = document.createElementNS(NS, 'path'); if (i >= sysIn.length) pa.setAttribute('class', 'o'); const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', 3.2); sysSvg.appendChild(pa); sysSvg.appendChild(c); sysPaths.push({ pa, c, n, out: i >= sysIn.length, k: i >= sysIn.length ? i - sysIn.length : i, cnt: i >= sysIn.length ? sysOut.length : sysIn.length }); });
-  let sysPh = -1;
-  // INPUT -> MCU AI -> RESPONSE on ONE screen: the three zones light up in sequence and the trails follow the real connection paths
+  // [V6] the ACT06 MCU AI page was removed; the background shader's MCU form stays at zero
   const mcuS = { a: 0, x: .5, y: .5, r: .3, k: 0 };
-  const PRIN = [['상황 인식', 'SITUATION AWARENESS'], ['실시간 연결', 'REAL-TIME CONNECTION'], ['상황 대응', 'ADAPTIVE RESPONSE'], ['의도 보조', 'INTENT ASSIST'], ['인간 통제', 'HUMAN CONTROL']];
-  let prinI = -2;
-  function mcuUpdate(p) {
-    const rr = ringEl.getBoundingClientRect(), ea = sm(clamp((p - .02) / .2));
-    mcuS.a = ea * (1 - sm(clamp((p - .97) / .03)));
-    const offIn = sm(clamp((p - .1) / .08)) * (1 - sm(clamp((p - .34) / .08))), offOut = sm(clamp((p - .62) / .08)) * (1 - sm(clamp((p - .88) / .06)));
-    const core = sm(clamp((p - .34) / .08)) * (1 - sm(clamp((p - .62) / .08)));
-    mcuS.x = (rr.left + rr.width / 2) / vw + (offOut - offIn) * .03; mcuS.y = 1 - (rr.top + rr.height / 2) / vh;
-    mcuS.r = rr.width * .5 / vh * (.55 + .45 * ea) * (1 + .07 * core + .04 * (offIn + offOut) + .02 * Math.sin(T * 1.6));
-    mcuS.k = p * 3.2 + core * Math.sin(T * 1.2) * .15;
-    mcuS.h = sm(clamp((p - .3) / .1)) * .5 + sm(clamp((p - .6) / .1)) * .5;
-    const st = p < .36 ? -1 : Math.min(4, Math.floor((p - .36) / .056)), one = $('#s6one');
-    if (st !== prinI) { prinI = st; one.style.opacity = 0; setTimeout(() => { if (prinI < 0) return; one.querySelector('b').textContent = PRIN[prinI][0]; one.querySelector('em').textContent = PRIN[prinI][1]; one.style.opacity = 1; }, st < 0 ? 0 : 160); }
-    $$('#ring .pn').forEach((pn, i) => { pn.classList.toggle('on', st >= i); pn.classList.toggle('lime', i === 4 && st === 4); });
-    const ci = p < .12 || p >= .36 ? -1 : Math.min(2, Math.floor((p - .12) / .08)), co = p < .64 || p >= .88 ? -1 : Math.min(2, Math.floor((p - .64) / .08));
-    sysIn.forEach((n, i) => n.classList.toggle('nd-on', i === ci)); sysOut.forEach((n, i) => n.classList.toggle('nd-on', i === co));
-    sysPaths.forEach(sp => sp.pa.classList.toggle('hot', sp.n.classList.contains('nd-on')));
-  }
-  function layoutSys(p) {
-    mcuUpdate(p);
-    const ph = p < .34 ? 0 : (p < .64 ? 1 : (p < .86 ? 2 : 3));
-    if (ph !== sysPh) { sysPh = ph; sysEl.dataset.ph = ph; $('#s6foot').classList.toggle('live', ph === 3); }
-    const pns = $$('#ring .pn');
-    prinEl.forEach((li, i) => { if (pns[i]) { pns[i].classList.toggle('on', p >= .38 + .05 * i); pns[i].classList.toggle('lime', i === 4 && p >= .86); } const on = p >= .38 + .05 * i; li.classList.toggle('on', on); li.classList.toggle('cur', on && p < .38 + .05 * (i + 1) && ph === 1); li.classList.toggle('lime', i === 4 && p >= .86); });
-    if (!RM) { const tx = mouse.sx * 8, ty = mouse.sy * 6; ringEl.style.transform = 'perspective(600px) rotateY(' + tx.toFixed(1) + 'deg) rotateX(' + (-ty).toFixed(1) + 'deg)'; }
-    const W = sysEl.offsetWidth, vert = W < 720, coreEl = $('#mcu'), rx = coreEl.offsetLeft + ringEl.offsetLeft, ry = coreEl.offsetTop + ringEl.offsetTop, rw = ringEl.offsetWidth, rh = ringEl.offsetHeight, cx = rx + rw / 2, cy = ry + rh / 2, R = rw * .44;
-    sysPaths.forEach((sp, i) => {
-      const n = sp.n, nl = n.offsetLeft, nt = n.offsetTop, nw = n.offsetWidth, nh = n.offsetHeight, f = (sp.k + 1) / (sp.cnt + 1), a = (f - .5) * 1.3;
-      let d;
-      if (!vert) {
-        const sx = sp.out ? cx + Math.cos(a) * R : nl + nw + 6, sy = sp.out ? cy + Math.sin(a) * R : nt + nh / 2, ex = sp.out ? nl - 6 : cx - Math.cos(a) * R, ey = sp.out ? nt + nh / 2 : cy + Math.sin(a) * R, dx = (ex - sx) * .55;
-        d = 'M' + sx.toFixed(1) + ',' + sy.toFixed(1) + ' C' + (sx + dx).toFixed(1) + ',' + sy.toFixed(1) + ' ' + (ex - dx).toFixed(1) + ',' + ey.toFixed(1) + ' ' + ex.toFixed(1) + ',' + ey.toFixed(1);
-      } else {
-        const sx = sp.out ? cx + Math.sin(a) * R : nl + nw / 2, sy = sp.out ? cy + Math.cos(a) * R : nt + nh + 4, ex = sp.out ? nl + nw / 2 : cx + Math.sin(a) * R, ey = sp.out ? nt - 4 : cy - Math.cos(a) * R, dy = (ey - sy) * .5;
-        d = 'M' + sx.toFixed(1) + ',' + sy.toFixed(1) + ' C' + sx.toFixed(1) + ',' + (sy + dy).toFixed(1) + ' ' + ex.toFixed(1) + ',' + (ey - dy).toFixed(1) + ' ' + ex.toFixed(1) + ',' + ey.toFixed(1);
-      }
-      sp.pa.setAttribute('d', d);
-      const len = sp.pa.getTotalLength(), t0 = sp.out ? .66 : .1, prog = clamp((p - (t0 + .06 * sp.k)) / .1);
-      sp.pa.style.strokeDasharray = len; sp.pa.style.strokeDashoffset = (len * (1 - prog)).toFixed(1);
-      if (prog >= 1 && !RM) { const pt = sp.pa.getPointAtLength(((T * .22 + i * .17) % 1) * len); sp.c.setAttribute('cx', pt.x); sp.c.setAttribute('cy', pt.y); sp.c.style.display = ''; } else sp.c.style.display = 'none';
-    });
-  }
   $$('.acc-h').forEach(b => b.addEventListener('click', () => {
     const it = b.parentElement, was = it.classList.contains('open');
     $$('.acc-i').forEach(x => { x.classList.remove('open'); x.querySelector('.acc-h').setAttribute('aria-expanded', 'false'); });
@@ -433,22 +388,42 @@
      pixel grid — quiet sections: a field of small squares that wakes up around the cursor
   ------------------------------------------------------------------ */
   const pxc = $('#pxg'), pxx = pxc.getContext('2d'); let pxE = null, pxN = 0, pxM = 0, pxCols = 0, pxRows = 0, pxCell = 24, pxOn = false;
+  // [V6] same picture, far less work per frame: squared-distance test before sqrt/pow, the per-cell sin() split into a precomputed
+  //      sin/cos pair, cached fillStyle strings (the ~2000 idle cells share ~30 alpha levels) and no redundant fillStyle writes.
+  let pxSA = null, pxCA = null;
+  const pxIdle = [];
   function pxStep(dt, a, now) {
     if (a < .01) { if (pxOn) { pxx.clearRect(0, 0, pxc.width, pxc.height); pxOn = false; } return; }
     const dpr = Math.min(devicePixelRatio || 1, 1.5), cell = small() ? 26 : 22;
-    if (pxc.width !== Math.round(vw * dpr) || pxc.height !== Math.round(vh * dpr) || cell !== pxCell || !pxE) { pxc.width = Math.round(vw * dpr); pxc.height = Math.round(vh * dpr); pxCell = cell; pxCols = Math.ceil(vw / cell) + 1; pxRows = Math.ceil(vh / cell) + 1; pxE = new Float32Array(pxCols * pxRows); }
+    if (pxc.width !== Math.round(vw * dpr) || pxc.height !== Math.round(vh * dpr) || cell !== pxCell || !pxE) {
+      pxc.width = Math.round(vw * dpr); pxc.height = Math.round(vh * dpr); pxCell = cell; pxCols = Math.ceil(vw / cell) + 1; pxRows = Math.ceil(vh / cell) + 1; pxE = new Float32Array(pxCols * pxRows);
+      pxSA = new Float32Array(pxCols * pxRows); pxCA = new Float32Array(pxCols * pxRows);
+      for (let j = 0; j < pxRows; j++) for (let i = 0; i < pxCols; i++) { const ph = (i * pxCell + pxCell / 2) * .011 + (j * pxCell + pxCell / 2) * .008, k = j * pxCols + i; pxSA[k] = Math.sin(ph); pxCA[k] = Math.cos(ph); }
+      pxIdle.length = 0;
+    }
     pxOn = true; pxx.setTransform(dpr, 0, 0, dpr, 0, 0); pxx.clearRect(0, 0, vw, vh);
-    const idle = now - lastMove > 2500 || mouse.px < 0, mx = idle ? vw * .5 + Math.sin(T * .5) * vw * .3 : mouse.px, my = idle ? vh * .5 + Math.cos(T * .7) * vh * .2 : mouse.py, R = Math.min(230, vw * .2), dec = Math.exp(-dt * 1.9);
-    const gap = 3, s = pxCell - gap;
-    for (let j = 0; j < pxRows; j++) for (let i = 0; i < pxCols; i++) {
-      const k = j * pxCols + i, cx = i * pxCell + pxCell / 2, cy = j * pxCell + pxCell / 2, d = Math.hypot(cx - mx, cy - my);
-      let e = pxE[k] * dec; if (d < R) e = Math.max(e, Math.pow(1 - d / R, 1.6) * (idle ? .55 : 1));
-      pxE[k] = e;
-      const sh = .5 + .5 * Math.sin(cx * .011 + cy * .008 + T * .6), base = .035 + .03 * sh;
-      const al = (base + e * .75) * a; if (al < .02) continue;
-      // cold gray → purple → lime as the energy rises
-      const r = Math.round(48 + (e < .6 ? e / .6 * 70 : 70 + (e - .6) / .4 * 79)), gg = Math.round(49 + (e < .6 ? e / .6 * -9 : -9 + (e - .6) / .4 * 215)), b = Math.round(55 + (e < .6 ? e / .6 * 190 : 190 - (e - .6) / .4 * 140));
-      pxx.fillStyle = 'rgba(' + r + ',' + gg + ',' + b + ',' + Math.min(.95, al).toFixed(3) + ')'; pxx.fillRect(i * pxCell + gap / 2, j * pxCell + gap / 2, s, s);
+    const idle = now - lastMove > 2500 || mouse.px < 0, mx = idle ? vw * .5 + Math.sin(T * .5) * vw * .3 : mouse.px, my = idle ? vh * .5 + Math.cos(T * .7) * vh * .2 : mouse.py, R = Math.min(230, vw * .2), R2 = R * R, dec = Math.exp(-dt * 1.9);
+    const gap = 3, s = pxCell - gap, cT = Math.cos(T * .6), sT = Math.sin(T * .6), im = idle ? .55 : 1;
+    let last = '';
+    for (let j = 0; j < pxRows; j++) {
+      const cy = j * pxCell + pxCell / 2, dy = cy - my, dy2 = dy * dy, y0 = j * pxCell + gap / 2;
+      for (let i = 0; i < pxCols; i++) {
+        const k = j * pxCols + i, cx = i * pxCell + pxCell / 2, dx = cx - mx, d2 = dx * dx + dy2;
+        let e = pxE[k] * dec; if (d2 < R2) e = Math.max(e, Math.pow(1 - Math.sqrt(d2) / R, 1.6) * im);
+        if (e < 1e-4) e = 0;
+        pxE[k] = e;
+        const sh = .5 + .5 * (pxSA[k] * cT + pxCA[k] * sT), base = .035 + .03 * sh;
+        const al = (base + e * .75) * a; if (al < .02) continue;
+        let st;
+        if (e === 0) { const ai = Math.round(Math.min(.95, al) * 1000); st = pxIdle[ai] || (pxIdle[ai] = 'rgba(48,49,55,' + (ai / 1000).toFixed(3) + ')'); }
+        else {
+          // cold gray → purple → lime as the energy rises
+          const r = Math.round(48 + (e < .6 ? e / .6 * 70 : 70 + (e - .6) / .4 * 79)), gg = Math.round(49 + (e < .6 ? e / .6 * -9 : -9 + (e - .6) / .4 * 215)), b = Math.round(55 + (e < .6 ? e / .6 * 190 : 190 - (e - .6) / .4 * 140));
+          st = 'rgba(' + r + ',' + gg + ',' + b + ',' + Math.min(.95, al).toFixed(3) + ')';
+        }
+        if (st !== last) { pxx.fillStyle = st; last = st; }
+        pxx.fillRect(i * pxCell + gap / 2, y0, s, s);
+      }
     }
   }
 
@@ -482,29 +457,28 @@
   const PBG = [[190, 170, 255], [255, 255, 255]];
   let pcMx = 0, pcMy = 0;
   function probDirector(p, dt) {
-    const g = $('#kt2'), asp = vw / vh, head = cs ? cs.pHd : 3, ox = cs ? cs.pX : -1, ang = cs ? cs.pA : .16;
+    const g = $m('#kt2'), asp = vw / vh, head = cs ? cs.pHd : 3, ox = cs ? cs.pX : -1, ang = cs ? cs.pA : .16;
     const still = RM || STILL, hot = still ? 0 : 1;
     const rect = g.getBoundingClientRect(), x0 = rect.left, wdt = Math.max(rect.width, 1);
     // title: light passes left→right, each letter goes translucent → crisp → hot-tinted under the head
-    const out2 = sm(clamp((p - .125) / .1));                       // "MEANING IS LOST." fades into its own ghost
+        const crs = g._ch.map(c => c.getBoundingClientRect());   // [V6] all reads first, then all writes: no forced layout per letter (values are identical: a letter's own transform is only written after its rect is read)
     g._ch.forEach((c, i) => {
       const line2 = g._lines.indexOf(c.closest('.ln')) === 1;
-      const cr = c.getBoundingClientRect(), cx = ((cr.left + cr.width / 2) - .5 * vw) / vh;   // q-space x
+      const cr = crs[i], cx = ((cr.left + cr.width / 2) - .5 * vw) / vh;   // q-space x
       const sx = (cx - ox) / Math.max(Math.cos(ang), .2) + (line2 ? .14 : 0);
       const act = clamp((head - sx) / .55);
       const near = Math.max(0, 1 - Math.abs(head - .22 - sx) / .35) * (act > 0 ? 1 : 0);
       const e = act * act * (3 - 2 * act);
-      let op = .1 + .9 * e, bl = (1 - e) * 9, ty = (1 - e) * vh * .018, tx = 0, rot = 0;
-      if (line2) { const d = out2 * clamp(1.2 - hs(i, 1) * .5); op = op * (1 - d * .8); bl += d * 5; tx = (hs(i, 2) - .5) * d * vw * .03; ty += d * d * vh * .05 * (.3 + hs(i, 3)); rot = (hs(i, 4) - .5) * 34 * d; }
+      let op = e, bl = (1 - e) * 6, ty = (1 - e) * vh * .018, tx = 0, rot = 0;   // [V5] one pass only: letters arrive with the light and stay crisp (no faint pre-ghost, no second scatter-out of line 2)
       c.style.opacity = op.toFixed(3); c.style.filter = bl > .3 ? 'blur(' + bl.toFixed(1) + 'px)' : '';
       c.style.transform = 'translate3d(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px,0) rotate(' + rot.toFixed(1) + 'deg)';
       const k = near * hot, r = Math.round(236 + 19 * k - 70 * (1 - e) * 0), gg = Math.round(228 - 40 * k), bb = 255;
       c.style.color = 'rgb(' + Math.round(244 - 90 * near * hot * (line2 ? 0 : .6)) + ',' + Math.round(238 - 70 * near * hot) + ',255)';
     });
     const titleOn = 1 - sm(clamp((p - .19) / .05)), tb = 1 - titleOn;
-    const pr = $('.problem'); pr.style.opacity = titleOn.toFixed(3); pr.style.visibility = titleOn > .01 ? 'visible' : 'hidden';
+    const pr = $m('.problem'); pr.style.opacity = titleOn.toFixed(3); pr.style.visibility = titleOn > .01 ? 'visible' : 'hidden';
     pr.style.translate = '0 ' + (-tb * vh * .05).toFixed(1) + 'px'; pr.style.filter = tb > .02 ? 'blur(' + (tb * 10).toFixed(1) + 'px)' : '';
-    const eb = $('.problem .eb'), ks = $('.problem .ko-sub');
+    const eb = $m('.problem .eb'), ks = $m('.problem .ko-sub');
     eb.style.opacity = sm(clamp((p - .0) / .03)).toFixed(3); ks.style.opacity = (sm(clamp((p - .1) / .05)) * .85).toFixed(3);
     // cases: overlapping, continuous
     pcMx = lerp(pcMx, mouse.sx || 0, still ? 1 : 1 - Math.exp(-dt * 4)); pcMy = lerp(pcMy, mouse.sy || 0, still ? 1 : 1 - Math.exp(-dt * 4));
@@ -542,7 +516,7 @@
       c.el.style.translate = (dir * ex * vw * .03 - dir * xx * vw * .03).toFixed(1) + 'px 0';
       c.el.style.filter = (ex + xx) > .05 ? 'blur(' + ((ex + xx) * 6).toFixed(1) + 'px)' : '';
     });
-    $$('#mini li').forEach((li, j) => li.classList.toggle('on', j === ci));
+    $$m('#mini li').forEach((li, j) => li.classList.toggle('on', j === ci));
   }
   /* INSIGHT → PRODUCT: the next slide enters from the right instead of rising from below (scroll is the timeline) */
   let hsOn = false;
@@ -587,15 +561,14 @@
       f.style.setProperty('--s', f._s.toFixed(3)); f.style.setProperty('--tx', f._t.toFixed(1) + 'px'); f.dataset.f = foc;
     }
     if (s.id === 'act2b') probDirector(p, dt);
-    if (s.id === 'act1') { const sl = $('.slogan'); if (sl) sl.style.setProperty('--bp', (-60 + clamp((p - .82) / .16) * 72).toFixed(0) + '%'); }
-    if (s.id === 'act6') layoutSys(p);
+    if (s.id === 'act1') { const sl = $m('.slogan'); if (sl) sl.style.setProperty('--bp', (-60 + clamp((p - .82) / .16) * 72).toFixed(0) + '%'); }
     if (s.id === 'act6a') {
       if (p < .1) aUser = false;
       if (!aUser) setAnat(p < .12 ? -1 : Math.min(4, Math.floor((p - .12) / .86 * 5)));
     }
     if (s.id === 'act7') {
-      const v = $('#outVid'), a = sm(clamp((p - .34) / .1));
-      v.style.opacity = a.toFixed(3); v.style.transform = 'scale(' + (1.1 - a * .1).toFixed(3) + ')'; $('#outShade').style.opacity = a.toFixed(3);
+      const v = $m('#outVid'), a = sm(clamp((p - .34) / .1));
+      v.style.opacity = a.toFixed(3); v.style.transform = 'scale(' + (1.1 - a * .1).toFixed(3) + ')'; $m('#outShade').style.opacity = a.toFixed(3);
       if (p > .37 && !v._pl) { v._pl = 1; v.currentTime = 0; v.play().catch(() => { }); } else if (p < .3 && v._pl) { v._pl = 0; v.pause(); }
     }
   }
@@ -603,7 +576,7 @@
   /* ------------------------------------------------------------------
      navigation UI
   ------------------------------------------------------------------ */
-  const uiActs = [[1, 'INTRO', '#act1'], [2, 'PROBLEM', '#act2'], [3, 'PRODUCT', '#act3'], [4, 'PUI SIMULATOR', '#act4'], [5, 'BE THE TOURIST', '#act5'], [6, 'SYSTEM', '#act6'], [7, 'OUTRO', '#act7']];
+  const uiActs = [[1, 'INTRO', '#act1'], [2, 'PROBLEM', '#act2'], [3, 'PRODUCT', '#act3'], [4, 'PUI SIMULATOR', '#act4'], [5, 'BE THE TOURIST', '#act5'], [6, 'SYSTEM', '#act6a'], [7, 'OUTRO', '#act7']];
   $('#dots').innerHTML = uiActs.map(a => '<a href="' + a[2] + '" data-ui="' + a[0] + '" aria-label="ACT 0' + a[0] + ' ' + a[1] + '"><span>0' + a[0] + ' ' + a[1] + '</span><i></i></a>').join('');
   let tween = null;
   function goTo(y, quick) {
@@ -642,7 +615,10 @@
     const mid = ss + vh * .45; let ui = 0; for (let k = 0; k < secs.length; k++) if (mid >= secs[k].top) ui = k;
     const sec = secs[ci], p = secP(sec, ss);
     mcuS.a = 0;
-    secs.forEach(s => { if (ss > s.top - vh * 1.2 && ss < s.top + s.h + vh * .2) updateDom(s, secP(s, ss), dt); });
+    secs.forEach(s => {
+      if (ss > s.top - vh * 1.2 && ss < s.top + s.h + vh * .2) updateDom(s, secP(s, ss), dt);
+      else if (s.id === 'act7') { const v = $m('#outVid'); if (v && v._pl) { v._pl = 0; v.pause(); } }   // [OPT] outro video no longer keeps playing after a far jump away (re-entry restarts it exactly as before)
+    });
     hSlide(ss);
     const us = secs[ui]; hudAct.textContent = 'ACT 0' + us.ui; hudName.textContent = us.name;
     $$('.dots a').forEach(a => a.setAttribute('aria-current', +a.dataset.ui === us.ui));
@@ -690,7 +666,14 @@
       S.warp = RM ? 0 : clamp(cs.warp + speed * .12 * (cs.part > .1 ? 1 : 0)); S.flash = RM ? 0 : cs.flash;
       if (RM) S.part *= .5;
       if (S.vis > .01) { dispT += dt; if (ds !== dispShown || (ds < 2 && dispT > .1)) { if (ds !== dispShown) dispShown = ds; dispT = 0; drawDisp(dispShown, T); } }
-      BR.render(S);
+      // [OPT-H1] ACT05 pinned: its opaque Three.js view (.sc-view, #07070c) fully covers the viewport, so the background WebGL pass is invisible there and is skipped.
+      //   Only while the 3D layer is ready+visible and the section is pinned with a 2px margin; ?noskip restores the old behaviour for A/B comparison.
+      let skipBg = false;
+      if (!NOSKIP && ready) {
+        const L = window.BR3 && window.BR3.layer;
+        if (L && L.ready && L.vis && L.view.classList.contains('on3d')) { const r5 = L.sec.getBoundingClientRect(); skipBg = r5.top <= -2 && r5.bottom >= vh + 2; }
+      }
+      if (!skipBg) BR.render(S);
       const showHS = inViewer && S.vis > .5;
       if (inViewer || hsWas) updateHS(showHS); hsWas = inViewer;
       if (!ready) { ready = true; finishLoad(); }
@@ -712,6 +695,19 @@
     scrollTo(0, 0);
     const mob = small();
     glOK = BR.init($('#gl'), { particles: mob ? 1100 : 2200, samples: mob ? 2 : 4 });
+    if (glOK) {   // [OPT] WebGL context loss: allow the browser to restore it, then rebuild via a (loop-guarded) reload instead of leaving a frozen/black canvas
+      const gc = $('#gl');
+      gc.addEventListener('webglcontextlost', e => { e.preventDefault(); });
+      gc.addEventListener('webglcontextrestored', () => {
+        let n = 0; try { n = +sessionStorage.getItem('br_ctxr') || 0; sessionStorage.setItem('br_ctxr', String(n + 1)); } catch (_) { }
+        if (n < 2) location.reload();
+      });
+    }
+    // [OPT] outro video: pause while the tab is hidden, resume only if the scroll director had it playing
+    document.addEventListener('visibilitychange', () => {
+      const v = $m('#outVid'); if (!v || !v._pl) return;
+      if (document.hidden) v.pause(); else if (!v.ended) v.play().catch(() => { });
+    });
     if (!glOK) root.classList.add('nogl');
     measure(); setLd(.15);
     try {

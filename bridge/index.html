@@ -29,7 +29,7 @@
     <a class="brand" href="#act1" aria-label="BRIDGE — back to start"><img class="brand-sym" src="assets/img/logo-symbol.png" alt="" draggable="false">BRIDGE</a>
   </div>
   <div class="hud-mid"><span id="hudAct">ACT 01</span><b id="hudName">INTRO</b></div>
-  <a class="hud-link" href="#act6">SYSTEM ↓</a>
+  <a class="hud-link" href="#act6a">SYSTEM ↓</a>
 </header>
 <nav class="dots" id="dots" aria-label="Experience chapters"></nav>
 <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
@@ -110,7 +110,7 @@
     </article>
     <article class="pcase" data-fx="none">
       <span class="num" aria-label="03"><i>0</i><i>3</i></span><h3>BROKEN<br>INTERACTION</h3><p class="kow"><b class="kw">대화가 끊어진다</b>.<br>서로를 보지 못한 채, 주문은 멈춘다.</p>
-      <div class="gx g3" aria-hidden="true"><i class="sph s1"></i><i class="sph s2"></i><i class="lk l1"></i><i class="lk l2"></i><i class="shd d1"></i><i class="shd d2"></i><i class="shd d3"></i></div>
+      <div class="gx g3" aria-hidden="true"><i class="bub bb1"><u></u><u></u><u></u></i><i class="bub bb2"><u></u><u></u><u></u></i><i class="cut c1"></i><i class="cut c2"></i><i class="cut cx"></i></div>
     </article>
     <div class="insight" data-r="0.83,1.05" data-fx="none">
       <div class="rv" id="insRv"><img class="dim" src="assets/img/render-3.webp" alt="" aria-hidden="true"><img class="lit" src="assets/img/render-3.webp" alt="" aria-hidden="true"><div class="rv-ring"></div></div>
@@ -148,15 +148,15 @@
 </section>
 
 <!-- ================= ACT 04 · PUI SIMULATOR ================= -->
-<section class="act pinned" id="act4" data-scene="a4" data-ui="4" data-name="PUI SIMULATOR" style="--h:420">
+<section class="act pinned" id="act4" data-scene="a4" data-ui="4" data-name="PUI SIMULATOR" style="--h:640">
   <div class="stage">
     <div class="sim-head">
       <p class="eb">ACT 04 — PUI SIMULATOR</p>
       <h2 class="hd md">SILENT.<br>CONNECTING.<br>READY.</h2>
       <p class="ko-sub">조용히 대기하고, 연결하고, 준비를 알립니다.</p>
     </div>
+    <div class="sim-desc glass" aria-live="polite"><p class="eb" id="simK">STATE 01</p><p id="simT"></p><ul id="simL"></ul></div>
     <div class="sim-bar">
-      <div class="sim-desc glass" aria-live="polite"><p class="eb" id="simK">STATE 01</p><p id="simT"></p><ul id="simL"></ul></div>
       <div class="states" role="tablist" aria-label="Interface state">
         <button role="tab" class="st on" data-st="0" aria-selected="true"><i class="d w"></i><b>SILENT</b><span>대기 · 흰색</span></button>
         <button role="tab" class="st" data-st="1" aria-selected="false"><i class="d p"></i><b>CONNECTING</b><span>연결 중 · 보라</span></button>
@@ -187,47 +187,13 @@
   </div>
 </section>
 
-<!-- ================= ACT 06 · SYSTEM (one screen: INPUT → MCU AI → RESPONSE) ================= -->
-<section class="act pinned" id="act6" data-scene="a6" data-ui="6" data-name="SYSTEM" style="--h:560">
-  <div class="stage s6">
-    <header class="s6-top" data-r="0,1.05" data-fx="none">
-      <p class="eb">ACT 06 — SYSTEM · HOW BRIDGE THINKS</p>
-      <h2 class="s6-h">AI는 돕고, <span>결정은 사람이.</span></h2>
-    </header>
-    <div class="s6-map" id="sysmap" data-ph="0">
-      <svg class="sys-lines" id="sysLines" aria-hidden="true"></svg>
-      <div class="s6-col in">
-        <p class="s6-lab" id="labIn"><i>01</i>INPUT<em>입력</em></p>
-        <div class="nd" data-r="0.08,1.05" data-fx="snapL"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="24" cy="24" r="6" fill="currentColor"/></svg><b>BUTTON<em>버튼</em></b><span>사람이 직접 누르는 조작</span></div>
-        <div class="nd" data-r="0.14,1.05" data-fx="snapL"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="24" cy="24" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="24" cy="24" r="2" fill="currentColor"/></svg><b>CAMERA<em>카메라</em></b><span>마주 보는 두 사람을 읽는 눈</span></div>
-        <div class="nd" data-r="0.20,1.05" data-fx="snapL"><svg viewBox="0 0 48 48"><rect x="18" y="6" width="12" height="22" rx="6" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M11 22a13 13 0 0 0 26 0M24 35v7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><b>VOICE<em>음성</em></b><span>상인과 관광객의 말</span></div>
-      </div>
-      <div class="s6-core" id="mcu">
-        <p class="s6-lab c" id="labMcu"><i>02</i>MCU AI<em>두뇌</em></p>
-        <div class="ring" id="ring"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="r1" cx="100" cy="100" r="96"/><circle class="r2" cx="100" cy="100" r="86"/><circle class="pn" cx="100.0" cy="4.0" r="3.2"/><circle class="pn" cx="183.1" cy="52.0" r="3.2"/><circle class="pn" cx="183.1" cy="148.0" r="3.2"/><circle class="pn" cx="100.0" cy="196.0" r="3.2"/><circle class="pn" cx="16.9" cy="148.0" r="3.2"/></svg></div>
-        <p class="s6-one" id="s6one" aria-live="polite"><b></b><em></em></p>
-      </div>
-      <div class="s6-col out">
-        <p class="s6-lab" id="labOut"><i>03</i>RESPONSE<em>응답</em></p>
-        <div class="nd" data-r="0.66,1.05" data-fx="snapR"><svg viewBox="0 0 48 48"><rect x="5" y="11" width="38" height="24" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 22h12M12 28h20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><b>DISPLAY<em>디스플레이</em></b><span>번역 · 요청 · 완료 정보를 양면에</span></div>
-        <div class="nd" data-r="0.71,1.05" data-fx="snapR"><svg viewBox="0 0 48 48"><path d="M8 19h8l10-8v26l-10-8H8z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M33 17a10 10 0 0 1 0 14M38 12a17 17 0 0 1 0 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><b>SPEAKER<em>스피커</em></b><span>알맞은 언어의 소리</span></div>
-        <div class="nd" data-r="0.76,1.05" data-fx="snapR"><svg viewBox="0 0 48 48"><path d="M5 20h38" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M10 28h28M16 35h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".45"/></svg><b>STATUS LIGHT<em>상태조명</em></b><span>상단 조명으로 상태 안내</span></div>
-      </div>
-    </div>
-    <footer class="s6-foot" id="s6foot" data-r="0.84,1.05" data-fx="up">
-      <p class="s6-tc">TECHNOLOGY CONNECTS.<br><b>PEOPLE DECIDE.</b></p>
-      <p class="s6-ko">기술은 연결하고, 사람은 결정합니다.</p>
-    </footer>
-  </div>
-</section>
-
 <!-- ================= ACT 06 · structure (five interaction points) ================= -->
-<section class="act pinned" id="act6a" data-scene="a6b" data-ui="6" data-name="SYSTEM" style="--h:260">
+<section class="act pinned" id="act6a" data-scene="a6c" data-ui="6" data-name="SYSTEM" style="--h:260">
   <div class="stage">
     <div class="slide anat">
       <div class="a-l">
-        <p class="eb">STRUCTURE</p>
-        <h2 class="hd md2">FIVE<br>INTERACTION<br>POINTS</h2>
+        <div class="a-h"><p class="eb">STRUCTURE</p>
+        <h2 class="hd md2">FIVE<br>INTERACTION<br>POINTS</h2></div>
         <ol class="legend" id="legend"></ol>
       </div>
       <div class="a-r"><div class="a-box"><div class="a-in" id="aIn"><img src="assets/img/render-4.webp" alt="BRIDGE close-up with five interaction points marked"></div></div><p class="a-cap" id="aCap"></p></div>
@@ -236,7 +202,7 @@
 </section>
 
 <!-- ================= ACT 06 · materials ================= -->
-<section class="act pinned" id="act6b" data-scene="a6b" data-ui="6" data-name="SYSTEM" style="--h:150">
+<section class="act pinned" id="act6b" data-scene="a6c" data-ui="6" data-name="SYSTEM" style="--h:150">
   <div class="stage">
     <div class="slide spec">
       <div class="sp-l">
@@ -2083,6 +2049,13 @@ class ScenarioLayer {
     loadGate().then(g => {
       this.gate = g; g.holder.position.set(0, 1.05, -0.1); this.H.add(g.holder);
       this.display = makeDisplay(g); this.display.set({ key: 'off' }); this.ready = true; view.classList.add('on3d');
+      // [V7] pre-warm: compile every shader variant (async where the browser supports it) and draw one hidden frame while the page is idle,
+      //      so the first time ACT05 scrolls into view there is no compile / first-draw stall. Visuals are unchanged; the frame goes to the off-screen canvas.
+      const warm = async () => {
+        try { if (this.renderer.compileAsync) await this.renderer.compileAsync(this.city.scene, this.camera); else this.renderer.compile(this.city.scene, this.camera); } catch (e) { }
+        try { this.composer.render(0.016); } catch (e) { }
+      };
+      (window.requestIdleCallback ? (f => requestIdleCallback(f, { timeout: 2500 })) : (f => setTimeout(f, 1200)))(warm);
     });
   }
   resize() {

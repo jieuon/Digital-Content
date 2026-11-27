@@ -70,11 +70,12 @@ function buildModel(g,onTex){
 
 function loadBuffer(o){
   if(o.b64) return Promise.resolve(b64ToBuf(o.b64));
+  var V=o.fallbackVar||'__GLB_B64';
   var viaScript=function(){
     return new Promise(function(res,rej){
-      if(window.__GLB_B64||!o.fallbackScript) return window.__GLB_B64?res(b64ToBuf(window.__GLB_B64)):rej(new Error('GLB를 읽지 못했습니다'));
+      if(window[V]||!o.fallbackScript) return window[V]?res(b64ToBuf(window[V])):rej(new Error('GLB를 읽지 못했습니다'));
       var s=document.createElement('script');s.src=o.fallbackScript;
-      s.onload=function(){window.__GLB_B64?res(b64ToBuf(window.__GLB_B64)):rej(new Error('GLB 데이터 없음'))};
+      s.onload=function(){window[V]?res(b64ToBuf(window[V])):rej(new Error('GLB 데이터 없음'))};
       s.onerror=function(){rej(new Error('GLB 데이터 파일 로드 실패'))};
       document.head.appendChild(s);
     });
@@ -117,7 +118,7 @@ window.ProductViewer=function(box,opt){
     cam.aspect=w/h;
     // 가로 280mm가 화면 폭의 약 78%가 되도록 거리 계산 (세로가 좁으면 세로 기준)
     var tv=Math.tan(cam.fov*RAD/2),th=tv*cam.aspect;
-    var rW=0.15/(th*0.82),rH=0.09/(tv*0.82);
+    var rW=(S.hw||0.15)/(th*0.82),rH=(S.hh||0.09)/(tv*0.82);
     S.r0=Math.max(rW,rH,0.3);cam.updateProjectionMatrix();
     if(!S.ready||!S.userZoomed){S.gr=S.r0;if(!S.ready)S.r=S.r0}
   }
@@ -193,7 +194,7 @@ window.ProductViewer=function(box,opt){
     var model=buildModel(parseGLB(buf),function(){});
     scene.add(model);
     var bb=new T.Box3().setFromObject(model),c=bb.getCenter(new T.Vector3());
-    S.target.copy(c);
+    S.target.copy(c);if(opt.fitToModel){var sz=bb.getSize(new T.Vector3());S.hw=Math.hypot(sz.x,sz.z)/2;S.hh=sz.y/2*1.15;fit();S.r=S.gr=S.r0}
     var ground=new T.Mesh(new T.PlaneGeometry(3,3),new T.ShadowMaterial({opacity:0.55}));
     ground.rotation.x=-Math.PI/2;ground.position.set(c.x,bb.min.y-0.0004,c.z);ground.receiveShadow=true;scene.add(ground);
     var gc=document.createElement('canvas');gc.width=gc.height=256;var gx=gc.getContext('2d'),gg=gx.createRadialGradient(128,128,0,128,128,128);
